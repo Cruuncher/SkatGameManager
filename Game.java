@@ -11,23 +11,13 @@ package edu.piggottk.skat;
  *
  */
 public class Game {
+	private static final int PLAYER_COUNT = 3;
 	
-	private int firstToPlay;
+	private int firstToPlayIndex;
 	private int trickNum;
 	private int highestBid;
 	private int highestBidder;	//Once bidding ends, highestBidder is the declarer. No need to save that twice.
-	private IPlayer player0;
-	private IPlayer player1;
-	private IPlayer player2;
-	private int player0GameScore;
-	private int player1GameScore;
-	private int player2GameScore;
-	private Pile player0Hand;
-	private Pile player1Hand;
-	private Pile player2Hand;
-	private Pile player0TricksWon;
-	private Pile player1TricksWon;
-	private Pile player2TricksWon;
+	private PlayerInfo[] players;
 	private Pile cardsPlayed;
 	private Pile skat;
 	private Deck deck;
@@ -35,64 +25,36 @@ public class Game {
 	private int baseVal;
 	private int multiplier;
 	
+	public Game() {
+		// Initialize our player array.
+		this.players = new PlayerInfo[PLAYER_COUNT];
+	}
+	
 	/**
-	 * Creates three players.
+	 * Initializes new instances of our player information for our players.
 	 */
-	public void setPlayers(IPlayer player0, IPlayer player1, IPlayer player2){
-		// Create three players, given three different Player classes created by the groups.
-		// For now, it uses DummyPlayer for all of them, which I created.
-		this.player0 = player0;
-		this.player1 = player1;
-		this.player2 = player2;
+	public void resetPlayers(){
+		// Initialize our player instances.
+		for(int i = 0; i < players.length; i++)
+			players[i] = new PlayerInfo();
 	}
 	
 	/**
 	 * Tells each player their index.
 	 */
 	private void assignIndexes(){
-		player0.assignIndex(0);
-		player1.assignIndex(1);
-		player2.assignIndex(2);
+		// Loop through our player information, grab our player and set their index.
+		for(int i = 0; i < players.length; i++)
+			players[i].getPlayer().assignIndex(i);
 	}
 	
 	/**
-	 * Assign a specific Player to be the first one to play their turn.
-	 * @param playerIndex the index of the specific player.
-	 */
-	private void assignFirstToPlay(int playerIndex){
-		firstToPlay = playerIndex;
-	}
-	
-	/**
-	 * Create an empty hand pile, and an empty tricks pile for each player.
-	 */
-	private void createPlayerPiles(){
-		player0Hand = new Pile();
-		player1Hand = new Pile();
-		player2Hand = new Pile();
-		
-		player0TricksWon = new Pile();
-		player1TricksWon = new Pile();
-		player2TricksWon = new Pile();
-	}
-	
-	/**
-	 * Create an empty skat pile and an empty pile for cards that have been played.
+	 * Create an empty skat pile and an empty pile for cards that have been played, and create a populated deck.
 	 */
 	private void createGamePiles(){
 		skat = new Pile();
 		cardsPlayed = new Pile();
-	}
-	
-	/**
-	 * Create the deck, and shuffle the cards.
-	 */
-	private void prepareDeck(){
 		deck = new Deck();
-		// TODO
-		// Create all the cards.
-		// Put them in the deck.
-		deck.shuffle();
 	}
 	
 	/**
@@ -100,16 +62,20 @@ public class Game {
 	 * four consecutive cards to each player, three consecutive cards to each player.
 	 */
 	private void dealCards(){
-		deck.dealCards(player0Hand, 3);
-		deck.dealCards(player1Hand, 3);
-		deck.dealCards(player2Hand, 3);
+		// Give three cards to each player.
+		for(int i = 0; i < players.length; i++)
+			deck.dealCards(players[i].getHandPile(), 3);
+		
+		// Put two cards in the skat.
 		deck.dealCards(skat, 2);
-		deck.dealCards(player0Hand, 4);
-		deck.dealCards(player1Hand, 4);
-		deck.dealCards(player2Hand, 4);
-		deck.dealCards(player0Hand, 3);
-		deck.dealCards(player1Hand, 3);
-		deck.dealCards(player2Hand, 3);
+		
+		// Give four cards to each player again.
+		for(int i = 0; i < players.length; i++)
+			deck.dealCards(players[i].getHandPile(), 4);
+		
+		// Give three cards to each player again.
+		for(int i = 0; i < players.length; i++)
+			deck.dealCards(players[i].getHandPile(), 3);
 	}
 	
 	/**
@@ -133,10 +99,15 @@ public class Game {
 		// Ask the declarer which type of game they want to play.
 		// (Have them create a GameTypeOptions object)
 		// Confirm that their GameTypeOptions object is a valid combination of game types.
-		// If valid, update multiplier and baseVal accordingly.
+		// If valid, update gameType, multiplier and baseVal variables accordingly.
 		// Push GameTypeOptions object to each player.
 	}
 	
+	/**
+	 * Determines if the given game type is valid based on the rules of Skat.
+	 * @param gameType the type of game to be evaluated
+	 * @return True if gameType is valid, and False otherwise.
+	 */
 	private boolean isValidGameType(GameTypeOptions gameType){
 		// Note: this is a helper function to be used in setGameType to confirm validity.
 		// TODO
@@ -163,6 +134,11 @@ public class Game {
 		// Remove the card from their hand pile and add it to the cardsPlayed pile.
 	}
 	
+	/**
+	 * Determines if the given card is valid.
+	 * @param card the Card to evaluate.
+	 * @return True if the card is value, and False otherwise.
+	 */
 	private boolean isValidCard(Card card){
 		// Note: this is a helper function to be used in playTrick to confirm validity.
 		// TODO
@@ -186,7 +162,7 @@ public class Game {
 	
 	/**
 	 * Determine a given card's strength, based on the current game type.
-	 * Strength: Card A beats Card B if Card A's strength is greater than Card B's strength.
+	 * Strength: Card A beats Card B if Card A's strength is greater than Card B's strength in this type of game.
 	 * @param card The card to determine the strength of.
 	 * @return the card's strength in the context of the current game type.
 	 */
@@ -237,26 +213,28 @@ public class Game {
 	 * Performs general setup necessary to start a game of skat.
 	 */
 	public void setupGame(){
-		// TODO
-		// Perform pre-game setup.
-		// Deal cards, manage bidding, get declarer to set game type. 
+		// Setup our players
+		this.resetPlayers();
+		this.assignIndexes();
 	}
 	
 	/**
 	 * The main playing aspect of the game.
-	 * Manages all ten tricks of a game of skat.
+	 * Manages bidding, and all ten tricks of a game of skat.
+	 * Performs end-of-game calculations and cleanup.
 	 */
-	public void beginPlay(){
+	public void playRound(){
+		// Reset our players piles (hand and won pile) -- necessary if this is not the first game played with these Players.
+		 for(int i = 0; i < players.length; i++)
+			players[i].resetPiles();
+		
+		// Create the game piles
+		this.createGamePiles();
+		
 		// TODO
+		// Shuffle and deal cards
+		// Manage bidding and game type declaration. 
 		// Play the 10 tricks of a game of skat.
-	}
-	
-	/**
-	 * Determine whether or not the declarer won, update game score accordingly.
-	 * Perform general end-game cleanup in order to prepare for another game of skat.
-	 */
-	public void endPlay(){
-		// TODO
 		// Once 10 tricks have been played, count card points, determine whether or not the declarer won, update game scores.
 		// Perform end-of-game cleanup.
 	}
