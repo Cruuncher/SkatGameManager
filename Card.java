@@ -6,8 +6,6 @@
  * <br>
  * <em>Currently there is no handling of bad input</em>
  * 
- * @author Kelly
- *
  */
 public class Card {
 	

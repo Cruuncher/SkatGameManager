@@ -1,5 +1,4 @@
 
-
 /**
  * 
  * The GameTypeOptions class allows for the creation of an object which will represent the style of play 

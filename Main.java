@@ -1,12 +1,9 @@
 
-
 /**
  * 
  * The main loop.  Contains no logic and simply creates players and sets them to an instance of Game to play Skat.<br>
  * <br>
  * <em>Currently there is no handling of bad input</em>
- * 
- * @author Kelly
  *
  */
 public class Main {

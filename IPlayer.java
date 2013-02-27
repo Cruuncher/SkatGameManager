@@ -1,11 +1,8 @@
 
-
 /**
  * 
  * An interface for players to implement.  Contains the necessary methods to be called by game to play Skat.<br>
  * <br>
- * 
- * @author Kelly
  *
  */
 public interface IPlayer {

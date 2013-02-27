@@ -7,8 +7,6 @@
  * <br>
  * <em>Currently there is no handling of bad input</em>
  * 
- * @author Kelly
- *
  */
 public class Game {
 	private static final int PLAYER_COUNT = 3;
@@ -33,7 +31,7 @@ public class Game {
 	/**
 	 * Initializes new instances of our player information for our players.
 	 */
-	public void resetPlayers(){
+	private void resetPlayers(){
 		// Initialize our player instances.
 		for(int i = 0; i < players.length; i++)
 			players[i] = new PlayerInfo();

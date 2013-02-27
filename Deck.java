@@ -1,5 +1,5 @@
-
 import java.util.Collections;
+
 
 /**
  * 
@@ -8,8 +8,6 @@ import java.util.Collections;
  * <br>
  * <em>Currently there is no handling of bad input</em>
  * 
- * @author Kelly
- *
  */
 public class Deck extends Pile {
 

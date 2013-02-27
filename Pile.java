@@ -1,7 +1,6 @@
 
 import java.util.ArrayList;
 
-
 /**
  * 
  * A representation for any generic collection of cards.  Contains generic methods used by the varius collections of cards in
@@ -9,8 +8,6 @@ import java.util.ArrayList;
  * <br>
  * <em>Currently there is no handling of bad input</em>
  * 
- * @author Kelly
- *
  */
 public class Pile {
 	protected ArrayList<Card> cards;
