@@ -1,4 +1,3 @@
-package edu.piggottk.skat;
 
 import java.util.Collections;
 

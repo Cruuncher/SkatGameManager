@@ -1,8 +1,4 @@
-package edu.piggottk.skat;
 
-import edu.piggottk.skat.Card;
-import edu.piggottk.skat.GameTypeOptions;
-import edu.piggottk.skat.Pile;
 
 /**
  * 

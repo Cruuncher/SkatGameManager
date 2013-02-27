@@ -1,4 +1,4 @@
-package edu.piggottk.skat;
+
 /**
  * 
  * The card object represents a single card in a deck of standard playing cards.  It contains a suit and a face value and a point

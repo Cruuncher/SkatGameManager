@@ -1,4 +1,4 @@
-package edu.piggottk.skat;
+
 
 public class PlayerInfo {
 	
