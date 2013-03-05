@@ -11,6 +11,7 @@
 public class Game {
 	private static final int PLAYER_COUNT = 3;
 	
+	private int dealer;
 	private int firstToPlayIndex;
 	private int trickNum;
 	private int highestBid;
@@ -26,6 +27,7 @@ public class Game {
 	public Game() {
 		// Initialize our player array.
 		this.players = new PlayerInfo[PLAYER_COUNT];
+		dealer=-1; //when we start a round we will increment dealer, and we want the first round to be with dealer=0
 	}
 	
 	/**
@@ -81,6 +83,43 @@ public class Game {
 	 */
 	private void initiateBidding(){
 		// TODO
+		boolean[] in = {true, true, true};
+		int highest = 0;
+		int currentAsking = (dealer + 1) % PLAYER_COUNT;
+		int numPeoplePassed = 0;
+		
+		while(true)
+		{
+			if(in[currentAsking]) //don't want to ask for a bid if they're out
+			{
+				int tempBid = players[currentAsking].getPlayer().bid(highest, players[currentAsking].getHandPile());
+				if(tempBid == -1)
+				{
+					in[currentAsking] = false;
+					numPeoplePassed++;
+					if(numPeoplePassed == PLAYER_COUNT-1) //if all passed but one
+						break;
+				}
+				else if(isValidBid(tempBid, highest))
+				{
+					highest=tempBid;
+				}
+				else
+				{
+					//We got an invalid bid, not sure how we want to handle that yet
+				}
+			}
+			currentAsking = (currentAsking + 1) % PLAYER_COUNT;
+		}
+		
+		for(int i = 0 ; i < in.length ; i++)
+		{
+			if(in[i])
+			{
+				//player i is the declarer.
+			}
+		}
+		
 		// One by one, ask each player to bid.
 		// Players must either bid higher than the current highest bid, or pass.
 		// Once two of the three players have passed, assign the remaining player with the highest bid to be the declarer.
@@ -144,6 +183,27 @@ public class Game {
 		// determine whether or not the given card is valid.
 		// Return true if it is valid, and false otherwise.
 		return true;
+	}
+	
+	/**
+	 * Determines if a bid is valid.
+	 * @param bid The bid to evaluate
+	 * @param highestBid The previous highest bid
+	 * @return True if valid, false otherwise
+	 */
+	private boolean isValidBid(int bid, int highestBid)
+	{
+		int[] legalValues = {18, 20, 22, 23, 24, 27, 30, 33, 35, 36, 40, 44, 45, 46, 48, 
+							 50, 54, 55, 59, 60, 63, 66, 70, 72, 77, 81, 84, 88, 90, 96, 
+							 99, 100, 108, 110, 120, 121, 132, 144, 160, 168, 192};
+		if(bid > highestBid)
+		{
+			for(int i = 0 ; i < legalValues.length ; i++)
+			{
+				if(bid==legalValues[i])return true;
+			}
+		}
+		return false;
 	}
 	
 	/**
@@ -228,6 +288,8 @@ public class Game {
 		
 		// Create the game piles
 		this.createGamePiles();
+		
+		dealer = (dealer + 1) % PLAYER_COUNT;
 		
 		// TODO
 		// Shuffle and deal cards
