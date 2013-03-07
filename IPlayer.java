@@ -15,12 +15,13 @@ public interface IPlayer {
 	public void assignIndex(int playerIndex);
 	
 	/**
-	 * Get this player's next bid, or -1 if they want to pass.
-	 * @param currentHighestBid The current highest bid that the player must pass or outbid.
+	 * Determine whether this player wants to bid, match, or pass.
+	 * @param currentHighestBid The current highest bid that the player must pass or outbid/match.
 	 * @param hand The player's hand.
-	 * @return Returns the player's next bid, or -1 if they choose to pass.
+	 * @param canMatch True if this player is allowed to match the current highest bid, and false if they must outbid the current highest bid.
+	 * @return True if this player wants to bid/match, and false if they want to pass. 
 	 */
-	public int bid(int currentHighestBid, Pile hand);
+	public boolean bid(int currentHighestBid, Pile hand, boolean canMatch);
 	
 	/**
 	 * (For the declarer player only)
@@ -68,7 +69,7 @@ public interface IPlayer {
 	/**
 	 * Choose a Card from your hand to play this turn.
 	 * @param hand The player's current hand.
-	 * @param cardsPlayed The cards that have already been played this round.
+	 * @param cardsPlayed The cards that have already been played this round, indexed in the order they were played.
 	 * @param whoPlayedFirstCard The index of the player who played the first card this round.
 	 * @return Returns the Card you wish to play this round.
 	 */
@@ -76,7 +77,7 @@ public interface IPlayer {
 
 	/**
 	 * Tells the player who won the trick this round, and which cards were played in the trick.
-	 * @param cardsPlayed The pile of cards played.
+	 * @param cardsPlayed The pile of cards played, indexed in the order they were played.
 	 * @param whoWonIndex The index of the player who won the trick.
 	 */
 	public void endTrick(Pile cardsPlayed, int whoWonIndex);

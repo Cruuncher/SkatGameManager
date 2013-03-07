@@ -57,12 +57,14 @@ public class DummyPlayer implements IPlayer {
 	}
 
 	@Override
-	public int bid(int currentHighestBid, Pile hand) {
+	public boolean bid(int currentHighestBid, Pile hand, boolean canMatch) {
 		// TODO
+		// Examine canMatch -- determine whether or not you may match the current highest bid,
+		// or if you must bid higher.
 		// Examine your hand.
-		// [Strategy] Decide whether or not to bid.
-		// Return a bid higher than highestBid if you decide to bid, otherwise return 0.
-		return 0;
+		// [Strategy] Decide whether to bid/match, or pass.
+		// Return true if you want to bid/match, or false if you want to pass.
+		return false;
 	}
 
 	@Override

@@ -83,78 +83,78 @@ public class Game {
 	 */
 	private void initiateBidding(){
 		// TODO
-		boolean[] in = {true, true, true};
-		int highest = 0;
-		int currentAsking = (dealer + 1) % PLAYER_COUNT;
-		int numPeoplePassed = 0;
-		
-		while(true)
-		{
-			if(in[currentAsking]) //don't want to ask for a bid if they're out
-			{
-				int tempBid = players[currentAsking].getPlayer().bid(highest, players[currentAsking].getHandPile());
-				if(tempBid == -1)
-				{
-					in[currentAsking] = false;
-					numPeoplePassed++;
-					if(numPeoplePassed == PLAYER_COUNT-1) //if all passed but one
-						break;
-				}
-				else if(isValidBid(tempBid, highest))
-				{
-					highest=tempBid;
-				}
-				else
-				{
-					//We got an invalid bid, force them to pass, and print a notice
-					System.out.println("forced player: " + currentAsking + " to pass due to an invalid bid.");
-					in[currentAsking] = false;
-					numPeoplePassed++;
-					if(numPeoplePassed == PLAYER_COUNT-1) //if all passed but one
-						break;
-				}
-			}
-			currentAsking = (currentAsking + 1) % PLAYER_COUNT;
-		}
-		
-		//here we know that 2 people passed
-		
-		for(int i = 0 ; i < in.length ; i++)
-		{
-			if(in[i]) //i is either the declarer, or not been asked to bid yet
-			{
-				if(highest==0) //means the first 2 players passed, but the last hasn't been asked yet
-				{
-					int tempBid = players[i].getPlayer().bid(0, players[i].getHandPile());
-					if(tempBid==-1)
-					{
-						System.out.println("All players passed, game ending.");
-						break;
-					}
-					else if(isValidBid(tempBid, highest))
-					{
-						highest=tempBid;
-					}
-					else
-					{
-						System.out.println("forced player: " + i + " to pass due to an invalid bid.");
-						System.out.println("All players passed, game ending.");
-						break;
-					}
-				}
-				
-				//by this point we know at least 1 person made a valid bid, and the other have passed.
-				highestBid = highest;
-				highestBidder = i;
-			}
-		}
-		
-		
-		
-		// One by one, ask each player to bid.
-		// Players must either bid higher than the current highest bid, or pass.
-		// Once two of the three players have passed, assign the remaining player with the highest bid to be the declarer.
-		// **NOTE** Use proper bidding with Forehand/Middlehand/Rearhand?????
+//		boolean[] in = {true, true, true};
+//		int highest = 0;
+//		int currentAsking = (dealer + 1) % PLAYER_COUNT;
+//		int numPeoplePassed = 0;
+//		
+//		while(true)
+//		{
+//			if(in[currentAsking]) //don't want to ask for a bid if they're out
+//			{
+//				int tempBid = players[currentAsking].getPlayer().bid(highest, players[currentAsking].getHandPile());
+//				if(tempBid == -1)
+//				{
+//					in[currentAsking] = false;
+//					numPeoplePassed++;
+//					if(numPeoplePassed == PLAYER_COUNT-1) //if all passed but one
+//						break;
+//				}
+//				else if(isValidBid(tempBid, highest))
+//				{
+//					highest=tempBid;
+//				}
+//				else
+//				{
+//					//We got an invalid bid, force them to pass, and print a notice
+//					System.out.println("forced player: " + currentAsking + " to pass due to an invalid bid.");
+//					in[currentAsking] = false;
+//					numPeoplePassed++;
+//					if(numPeoplePassed == PLAYER_COUNT-1) //if all passed but one
+//						break;
+//				}
+//			}
+//			currentAsking = (currentAsking + 1) % PLAYER_COUNT;
+//		}
+//		
+//		//here we know that 2 people passed
+//		
+//		for(int i = 0 ; i < in.length ; i++)
+//		{
+//			if(in[i]) //i is either the declarer, or not been asked to bid yet
+//			{
+//				if(highest==0) //means the first 2 players passed, but the last hasn't been asked yet
+//				{
+//					int tempBid = players[i].getPlayer().bid(0, players[i].getHandPile());
+//					if(tempBid==-1)
+//					{
+//						System.out.println("All players passed, game ending.");
+//						break;
+//					}
+//					else if(isValidBid(tempBid, highest))
+//					{
+//						highest=tempBid;
+//					}
+//					else
+//					{
+//						System.out.println("forced player: " + i + " to pass due to an invalid bid.");
+//						System.out.println("All players passed, game ending.");
+//						break;
+//					}
+//				}
+//				
+//				//by this point we know at least 1 person made a valid bid, and the other have passed.
+//				highestBid = highest;
+//				highestBidder = i;
+//			}
+//		}
+//		
+//		
+//		
+//		// One by one, ask each player to bid.
+//		// Players must either bid higher than the current highest bid, or pass.
+//		// Once two of the three players have passed, assign the remaining player with the highest bid to be the declarer.
+//		// **NOTE** Use proper bidding with Forehand/Middlehand/Rearhand?????
 	}
 	
 	/**
