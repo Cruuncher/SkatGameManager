@@ -116,4 +116,11 @@ public class Pile {
 			}
 		}
 	}
+	
+	public boolean containsCard(Card card) {
+		for(int i = 0; i < this.getNumCards(); i++)
+			if(this.getCard(i).equals(card))
+				return true;
+		return false;
+	}
 }

@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 
 
 /**
@@ -161,14 +164,85 @@ public class Game {
 	 * Defines the type of game to be played, including all applicable variables.
 	 */
 	private void setGameType(){
-		// TODO
 		// Ask the declarer (highestBidder) if they want to see the skat.
-		// If yes, show them the skat.
+		PlayerInfo declarerInfo = this.players[this.highestBidder];
+		IPlayer declarerPlayer = declarerInfo.getPlayer();
+		Pile declarerHand = declarerInfo.getHandPile();
+		boolean viewSkat = declarerPlayer.decideTakeSkat(declarerHand.copy());
+		
+		// If they want to view the skat..
+		if(viewSkat)
+		{
+			// Let them decide on what cards to take.
+			Pile newSkat = declarerPlayer.giveSkat(declarerHand.copy(), skat.copy());
+			
+			// Verify skat length.
+			if(newSkat.getNumCards() != 2)
+			{
+				// TODO: Skat is invalid size, report critical error to stats.
+				return;
+			}
+			
+			// TODO: Do the actual moving and verification of cards.
+			
+			// Loop through the cards of the old skat
+			int z = 0;
+			for(int i = 0; i < skat.getNumCards(); i++)
+			{
+				// If the new skat doesn't contain an old skat card.
+				if(!newSkat.containsCard(skat.getCard(i)))
+				{
+					Card cardReplaced = skat.getCard(i);
+					Card replacedBy = null;
+					// There must've been a card we replaced it with.
+					for(int x = z; x < newSkat.getNumCards(); x++, z++)
+					{
+						if(!skat.containsCard(newSkat.getCard(i)))
+						{
+							replacedBy = newSkat.getCard(i);
+							break;
+						}
+					}
+					
+					// Error checking, make sure the replacedBy card is in declarerHand..
+					if(!declarerHand.containsCard(replacedBy))
+					{
+						// TODO: The new card in the skat wasn't in declarer hand.
+						// We should report an error here to stats.
+					}
+					
+					// Swap the cards in skat with the hand.
+					skat.replaceCards(cardReplaced, replacedBy);
+					declarerHand.replaceCards(replacedBy, cardReplaced);
+				}
+			}
+		}
+		
 		// Ask the declarer which type of game they want to play.
-		// (Have them create a GameTypeOptions object)
+		GameTypeOptions chosenGameType = declarerPlayer.decideGameType(declarerHand.copy());
+		
 		// Confirm that their GameTypeOptions object is a valid combination of game types.
+		boolean validGame = this.isValidGameType(chosenGameType);
+		
 		// If valid, update gameType, multiplier and baseVal variables accordingly.
+		if(validGame)
+		{
+			// Set our game-type.
+			this.gameType = chosenGameType;
+			
+			// TODO: Update multiplier/base values.
+		}
+		else
+		{
+			// TODO: Decide on what to do when invalid.
+			// Maybe just use our statistics class to
+			// invoke a critical error and terminate?
+			return;
+		}
+		
 		// Push GameTypeOptions object to each player.
+		for(PlayerInfo pi : this.players)
+			pi.getPlayer().setGameType(this.gameType, this.highestBidder);
 	}
 	
 	/**
