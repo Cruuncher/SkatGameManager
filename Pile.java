@@ -117,6 +117,11 @@ public class Pile {
 		}
 	}
 	
+	/**
+	 * Returns true if a given card is in this Pile.
+	 * @param card The card to find in the Pile.
+	 * @return True if the card is in the pile, and false otherwise.
+	 */
 	public boolean containsCard(Card card) {
 		for(int i = 0; i < this.getNumCards(); i++)
 			if(this.getCard(i).equals(card))

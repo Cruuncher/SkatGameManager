@@ -68,6 +68,14 @@ public class GameTypeOptions {
 	}
 	
 	/**
+	 * Getter method to see if the declarer looked at the skat.
+	 * @return Hand game or Skat game.
+	 */
+	public SkatHandType getHandType() {
+		return handType;
+	}
+	
+	/**
 	 * Getter method to let players know if the declarer declared Ouvert.
 	 * @return true if the declarer declared Ouvert, and false otherwise.
 	 */
