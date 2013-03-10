@@ -39,10 +39,11 @@ public class Game {
 	/**
 	 * Initializes new instances of our player information for our players.
 	 */
-	private void resetPlayers() {
+	private void resetPlayers(IPlayer player1, IPlayer player2, IPlayer player3) {
 		// Initialize our player instances.
-		for (int i = 0; i < players.length; i++)
-			players[i] = new PlayerInfo();
+		players[0] = new PlayerInfo(player1);
+		players[1] = new PlayerInfo(player2);
+		players[2] = new PlayerInfo(player2);
 	}
 
 	/**
@@ -84,6 +85,30 @@ public class Game {
 		// Give three cards to each player again.
 		for (int i = 0; i < players.length; i++)
 			deck.dealCards(players[i].getHandPile(), 3);
+
+		// Note, we could've just dealt 10 cards straight up to the player..
+		// We didn't do this to maintain the traditional conventions, in-case
+		// it would've ended up with deducted marks on our part.
+	}
+
+	/**
+	 * Given a current bid integer, grabs the next possible bid, -1 if it's the last bid already.
+	 * @param currentBid The current bid we had, used to obtain the next bid.
+	 * @return Returns the next bid following currentBid.
+	 */
+	private int nextBid(int currentBid) {
+		// Loop for all of our bid values.
+		for (int i = 0; i < LEGAL_BID_VALUES.length; i++) {
+			// If we found the bid
+			if (LEGAL_BID_VALUES[i] == currentBid) {
+				// If it's the last bid, return -1.
+				if (LEGAL_BID_VALUES[i] == LEGAL_BID_VALUES[LEGAL_BID_VALUES.length - 1])
+					return -1;
+				// Otherwise return the next bid
+				return LEGAL_BID_VALUES[i + 1];
+			}
+		}
+		return -2; // Shouldn't ever happen
 	}
 
 	/**
@@ -95,19 +120,105 @@ public class Game {
 		int middleHand = (dealer + 2) % PLAYER_COUNT;
 		int rearHand = (dealer + 3) % PLAYER_COUNT;
 
+		boolean frontHandWonFirst = true; // set these defaults to the most
+											// likely (least likely to have to
+											// change them)
+		boolean rearHandWon = false;
+
 		int currentBid = 18; //
 		int who = -1; // the person who made the highest bid so far. -1 means no
 						// bid yet.
 
 		// bid between middleHand and frontHand, until one of them passes.
 		while (true) {
-			if (who == -1 || who == frontHand) {
-				if (players[middleHand].getPlayer().bid(currentBid,
-						players[middleHand].getHandPile(), false)) {
+			PlayerInfo pi = players[middleHand];
+			IPlayer player = pi.getPlayer();
+			boolean canMatch = !(who == frontHand); // we can match so long as
+													// frontHand doesn't hold
+													// the highest bid
 
+			if (player.bid(currentBid, pi.getHandPile(), canMatch)) {
+				if (canMatch)
+					who = middleHand;
+				else {
+					int t = nextBid(currentBid);
+					if (t == -1) {
+						// TODO report non-critical error
+						// System.out.println("Player " + middleHand +
+						// " forced to pass, as they cannot bid that high");
+						break; // frontHand won this bidding, and it's defaulted
+								// to true
+					} else {
+						currentBid = t;
+						who = middleHand;
+					}
 				}
+
+			} else
+				break; // frontHand won this bidding, and it's defaulted to true
+
+			pi = players[frontHand];
+			player = pi.getPlayer();
+			canMatch = true;
+
+			if (player.bid(currentBid, pi.getHandPile(), canMatch))
+				who = frontHand;
+			else {
+				frontHandWonFirst = false; // tell the next loop that front hand
+											// lost
+				break;
 			}
 		}
+		// one person has passed
+		int otherBidder = frontHand
+				+ ((!frontHandWonFirst ? 1 : 0) % PLAYER_COUNT);
+
+		while (true) {
+			PlayerInfo pi = players[rearHand];
+			IPlayer player = pi.getPlayer();
+			boolean canMatch = !(who == otherBidder);
+
+			if (player.bid(currentBid, pi.getHandPile(), canMatch)) {
+				if (canMatch)
+					who = rearHand;
+				else {
+					int t = nextBid(currentBid);
+					if (t == -1) {
+						// TODO report non-critical error
+						// System.out.println("Player " + rear +
+						// " forced to pass, as they cannot bid that high");
+						break; // frontHand won this bidding, and it's defaulted
+								// to true
+					} else {
+						currentBid = t;
+						who = rearHand;
+					}
+				}
+			} else
+				break; // rearHandWon=false;
+
+			pi = players[otherBidder];
+			player = pi.getPlayer();
+			canMatch = true;
+
+			if (player.bid(currentBid, pi.getHandPile(), canMatch))
+				who = otherBidder;
+			else {
+				rearHandWon = true;
+				break;
+			}
+		}
+
+		if (rearHandWon) {
+			highestBidder = rearHand;
+		} else {
+			if (frontHandWonFirst) {
+				highestBidder = frontHand;
+			} else {
+				highestBidder = middleHand;
+			}
+		}
+
 	}
 
 	/**
@@ -256,6 +367,13 @@ public class Game {
 			return false;
 		}
 
+		// If they have ouvert true, you can't have schwarz false
+		if (ouvert && !schwarz) {
+			// TODO: Report non-critical error (CAN'T DECLARE OUVERT AND
+			// NOT SCHWARZ) (we fix it up).
+			return false;
+		}
+
 		return true;
 	}
 
@@ -265,47 +383,52 @@ public class Game {
 	private void playTrick() {
 		// Create a player index
 		int playerIndex = firstToPlayIndex;
-		
+
 		// Loop for each player..
-		for(int i = 0; i < PLAYER_COUNT; i++) {
+		for (int i = 0; i < PLAYER_COUNT; i++) {
 			// Get the player
 			PlayerInfo curPlayerInfo = players[playerIndex];
 			IPlayer curPlayer = curPlayerInfo.getPlayer();
 			Pile curHand = curPlayerInfo.getHandPile();
 			Card playedCard = null;
-			
-			// We'll let our user try to play a valid card as many times as cards they have..
+
+			// We'll let our user try to play a valid card as many times as
+			// cards they have..
 			for (int x = 0; x < curHand.getNumCards(); x++) {
-				playedCard = curPlayer.playTurn(curHand.copy(), cardsPlayed.copy(), firstToPlayIndex);
-				
-				// Check if the card is valid, if it isn't, we make them try again.
-				if(!isValidCard(playedCard)) {
-					// TODO: Report non-critical error (played invalid card, we'll let them try again).
+				playedCard = curPlayer.playTurn(curHand.copy(),
+						cardsPlayed.copy(), firstToPlayIndex);
+
+				// Check if the card is valid, if it isn't, we make them try
+				// again.
+				if (!isValidCard(playedCard)) {
+					// TODO: Report non-critical error (played invalid card,
+					// we'll let them try again).
 					playedCard = null;
-				}
-				else
+				} else
 					break;
 			}
-			
-			// If our player somehow didn't pick a card by now, our strategy is a total failure..
-			if(playedCard == null) {
-				// TODO: Report critical error (player couldn't pick a valid card after multiple tries).
+
+			// If our player somehow didn't pick a card by now, our strategy is
+			// a total failure..
+			if (playedCard == null) {
+				// TODO: Report critical error (player couldn't pick a valid
+				// card after multiple tries).
 				return;
 			}
-			
+
 			// If our card isn't even in our hand, there's a real problem
-			if(!curHand.containsCard(playedCard)) {
-				// TODO: Report critical error (player chose a card they didn't even have to play for their trick...)
+			if (!curHand.containsCard(playedCard)) {
+				// TODO: Report critical error (player chose a card they didn't
+				// even have to play for their trick...)
 				return;
 			}
-			
+
 			// Remove the card from their hand pile, add it to cardsPlayed
 			curHand.removeCard(playedCard);
 			cardsPlayed.addCard(playedCard);
-			
+
 			// Increment our player index.
-			playerIndex += 1;
-			playerIndex %= PLAYER_COUNT;
+			playerIndex = (playerIndex + 1) % PLAYER_COUNT;
 		}
 	}
 
@@ -410,7 +533,7 @@ public class Game {
 	 *            The multiplier.
 	 * @return The game value.
 	 */
-	private int gameValue(int baseVal, int multiplier) {
+	private int gameValue() {
 		// TODO
 		// Determine the value of this game using the base value and the
 		// multiplier.
@@ -434,9 +557,9 @@ public class Game {
 	/**
 	 * Performs general setup necessary to start a game of skat.
 	 */
-	public void setupGame() {
+	public void setupGame(IPlayer player1, IPlayer player2, IPlayer player3) {
 		// Setup our players
-		this.resetPlayers();
+		this.resetPlayers(player1, player2, player3);
 		this.assignIndexes();
 
 		// When we start a round, we will increment dealer, and we want the
@@ -457,14 +580,26 @@ public class Game {
 		// Create the game piles
 		this.createGamePiles();
 
+		// Increment our dealer.
 		dealer = (dealer + 1) % PLAYER_COUNT;
 
-		// TODO
 		// Shuffle and deal cards
+		this.deck.shuffle();
+		this.dealCards();
+
 		// Manage bidding and game type declaration.
+		this.initiateBidding();
+		this.setGameType();
+
 		// Play the 10 tricks of a game of skat.
+		for (int i = 0; i < 10; i++) {
+			trickNum = i;
+			this.playTrick();
+			this.winTrick();
+		}
+
 		// Once 10 tricks have been played, count card points, determine whether
 		// or not the declarer won, update game scores.
-		// Perform end-of-game cleanup.
+		this.assignGamePoints();
 	}
 }

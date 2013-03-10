@@ -1,4 +1,5 @@
 
+
 /**
  * 
  * A dummy player is a representation of a Skat player who plays valid cards with no AI behind it.<br>
@@ -75,7 +76,7 @@ public class DummyPlayer implements IPlayer {
 		// Create the corresponding type of GameTypeOptions object, and return it.
 		// Keep in mind, only certain combinations of game type variables are valid.
 		// (For example, you cannot have a game that is both Skat and Schneider)
-		return null;
+		return new GameTypeOptions(GameTypeOptions.SkatHandType.Hand, GameTypeOptions.GameType.Suit, GameTypeOptions.TrumpSuit.Diamonds, false, false, false);
 	}
 
 	@Override

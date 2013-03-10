@@ -17,9 +17,9 @@ public class PlayerInfo {
 	 * Creates a new PlayerInfo object which initializes an object of type IPlayer, initializes gameScore to 0,
 	 * and creates the relevant player piles.
 	 */
-	public PlayerInfo() {
+	public PlayerInfo(IPlayer playerInstance) {
 		// Initialize our player (swapping between implementations of IPlayer would be here).
-		this.player = new DummyPlayer();
+		this.player = playerInstance;
 		this.gameScore = 0;
 		this.resetPiles();
 	}
