@@ -53,7 +53,7 @@ public class DummyPlayer implements IPlayer {
 		
 		// Make it random
 		Random r = new Random();
-		return r.nextInt(2) == 0;
+		return r.nextBoolean();
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public class DummyPlayer implements IPlayer {
 		
 		// Make it random
 		Random r = new Random();
-		return r.nextInt(2) == 0;
+		return r.nextBoolean();
 	}
 
 	@Override
@@ -106,9 +106,9 @@ public class DummyPlayer implements IPlayer {
 		int indexHand = r.nextInt(GameTypeOptions.SkatHandType.values().length);
 		int indexSuit = r.nextInt(GameTypeOptions.GameType.values().length);
 		int indexTrump = r.nextInt(GameTypeOptions.TrumpSuit.values().length);
-		boolean iOuvert = r.nextInt(2) == 0;
-		boolean iSchwarz = r.nextInt(2) == 0;
-		boolean iSchneider = r.nextInt(2) == 0;
+		boolean iOuvert = r.nextBoolean();
+		boolean iSchwarz = r.nextBoolean();
+		boolean iSchneider = r.nextBoolean();
 		
 		return new GameTypeOptions(GameTypeOptions.SkatHandType.values()[indexHand], GameTypeOptions.GameType.values()[indexSuit], GameTypeOptions.TrumpSuit.values()[indexTrump], iOuvert, iSchneider, iSchwarz);
 	}

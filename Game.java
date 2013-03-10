@@ -174,8 +174,8 @@ public class Game {
 			}
 		}
 		// one person has passed
-		int otherBidder = frontHand
-				+ ((!frontHandWonFirst ? 1 : 0) % PLAYER_COUNT);
+		int otherBidder = (frontHand
+				+ ((!frontHandWonFirst ? 1 : 0)))  % PLAYER_COUNT;
 
 		while (true) {
 			PlayerInfo pi = players[rearHand];
@@ -321,13 +321,13 @@ public class Game {
 		// Can't declare it as a hand game if you took the skat
 		if (skathandType == GameTypeOptions.SkatHandType.Hand && tookSkat) {
 			// Report non-critical error (SHOULDN'T DECLARE HAND GAME IF YOU TOOK SKAT)
-			this.roundStats.logError("Declared hand game when declarer took skat. Setting to skat game instead.", this.indentationLevel);
+			this.roundStats.logError("Declared hand game when declarer took skat. Setting to skat game instead", this.indentationLevel);
 			skathandType = GameTypeOptions.SkatHandType.Skat;
 			
 		} else if (skathandType == GameTypeOptions.SkatHandType.Skat
 				&& !tookSkat) {
 			// Report non-critical error (SHOULDN'T DECLARE SKAT GAME IF YOU DIDN'T TAKE SKAT)
-			this.roundStats.logError("Declared skat game when declarer didn't take skat. Setting to hand game instead.", this.indentationLevel);
+			this.roundStats.logError("Declared skat game when declarer didn't take skat. Setting to hand game instead", this.indentationLevel);
 			skathandType = GameTypeOptions.SkatHandType.Hand;
 		}
 
@@ -335,7 +335,7 @@ public class Game {
 		if (actualGameType == GameTypeOptions.GameType.Suit
 				&& trump == GameTypeOptions.TrumpSuit.None) {
 			// Report critical error (CAN'T BE SUIT GAME WITH NO SUIT)
-			this.roundStats.logError("Cannot have a suit game without a trump suit.. Setting trump suit to Clubs.", this.indentationLevel);
+			this.roundStats.logError("Cannot have a suit game without a trump suit.. Setting trump suit to Clubs", this.indentationLevel);
 			trump = GameTypeOptions.TrumpSuit.Clubs;
 		}
 
@@ -343,7 +343,7 @@ public class Game {
 		if (((actualGameType == GameTypeOptions.GameType.Grand) | (actualGameType == GameTypeOptions.GameType.Null))
 				&& trump != GameTypeOptions.TrumpSuit.None) {
 			// Report critical error (CAN'T BE GRAND OR NULL GAME WITH A TRUMP SUIT)
-			this.roundStats.logError("Cannot have a " + actualGameType.toString() + " game with a trump suit.. Setting trump suit to None.", this.indentationLevel);
+			this.roundStats.logError("Cannot have a " + actualGameType.toString() + " game with a trump suit. Setting trump suit to None", this.indentationLevel);
 			trump = GameTypeOptions.TrumpSuit.None;
 		}
 
@@ -352,30 +352,32 @@ public class Game {
 		if ((skathandType == GameTypeOptions.SkatHandType.Skat && actualGameType != GameTypeOptions.GameType.Null)
 				&& (schwarz | schneider | ouvert)) {
 			// Report non-critical error (CAN'T DECLARE SCHWARZ/SCHNEIDER/OUVERT IN SKAT GAME)
-			this.roundStats.logError("Cannot have a Skat, non-Null game with schwarz, schneider or ouvert. Setting all to false.", this.indentationLevel);
-			gameType = new GameTypeOptions(gameType.getHandType(), gameType.getGameType(), gameType.getTrumpSuit(), false, false, false);
+			this.roundStats.logError("Cannot have a Skat, non-Null game with schwarz, schneider or ouvert. Setting all to false", this.indentationLevel);
+			schwarz = false;
+			schneider = false;
+			ouvert = false;
 		}
 
 		// If it's a null game, you can't declare schwarz and schneider.
 		if (actualGameType == GameTypeOptions.GameType.Null
 				&& (schwarz | schneider)) {
 			// Report non-critical error (CAN'T DECLARE NULL GAME AND SCHWARZ/SCHNEIDER)
-			this.roundStats.logError("Cannot have a null game and schwarz or schneider. Setting both to false.", this.indentationLevel);
+			this.roundStats.logError("Cannot have a null game and schwarz or schneider. Setting both to false", this.indentationLevel);
 			schwarz = false;
 			schneider = false;
 		}
 
 		// If they have ouvert true, you can't have schwarz false
-		if (ouvert && !schwarz) {
+		if (actualGameType != GameTypeOptions.GameType.Null && ouvert && !schwarz) {
 			// Report non-critical error (CAN'T DECLARE OUVERT AND NOT SCHWARZ) (we fix it up).
-			this.roundStats.logError("Cannot have a ouvert game without schwarz. Setting Schwarz to true.", this.indentationLevel);
+			this.roundStats.logError("Cannot have a ouvert game without schwarz (unless null). Setting Schwarz to true", this.indentationLevel);
 			schwarz = true;
 		}
 
 		// If they have schwarz true, you can't have schneider false
-		if (schwarz && !schneider) {
+		if (actualGameType != GameTypeOptions.GameType.Null && schwarz && !schneider) {
 			// Report non-critical error (CAN'T DECLARE SCHWARZ AND NOT SCHNEIDER) (we fix it up).
-			this.roundStats.logError("Cannot have a schwarz game without schneider. Setting schneider to true.", this.indentationLevel);
+			this.roundStats.logError("Cannot have a schwarz game without schneider (unless null). Setting schneider to true", this.indentationLevel);
 			schneider = true;
 		}
 		
@@ -669,12 +671,11 @@ public class Game {
 		for (int i = 0; i < 10; i++) {
 			// Log our header for our trick.
 			this.roundStats.log("Trick " + (i + 1) + ": ", this.indentationLevel);
-			this.indentationLevel++;
 			
 			// Play the trick and determine who won.
+			this.indentationLevel++;
 			this.playTrick();
 			this.winTrick();
-			
 			this.indentationLevel--;
 			
 			// If it's a null game, if declarer wins a trick, it's game over for them.
