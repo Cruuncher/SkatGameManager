@@ -17,11 +17,10 @@ public class Game {
 			77, 81, 84, 88, 90, 96, 99, 100, 108, 110, 120, 121, 132, 144, 160,
 			168, 192 };
 
-	private int dealer;
+	private int dealerIndex;
 	private int firstToPlayIndex;
-	private int trickNum;
 	private int highestBid;
-	private int highestBidder; // Once bidding ends, highestBidder is the
+	private int declarerIndex; // Once bidding ends, highestBidder is the
 								// declarer. No need to save that twice.
 	private PlayerInfo[] players;
 	private Pile cardsPlayed;
@@ -116,9 +115,9 @@ public class Game {
 	 * ends.
 	 */
 	private void initiateBidding() {
-		int frontHand = (dealer + 1) % PLAYER_COUNT;
-		int middleHand = (dealer + 2) % PLAYER_COUNT;
-		int rearHand = (dealer + 3) % PLAYER_COUNT;
+		int frontHand = (dealerIndex + 1) % PLAYER_COUNT;
+		int middleHand = (dealerIndex + 2) % PLAYER_COUNT;
+		int rearHand = (dealerIndex + 3) % PLAYER_COUNT;
 
 		boolean frontHandWonFirst = true; // set these defaults to the most
 											// likely (least likely to have to
@@ -210,12 +209,12 @@ public class Game {
 		}
 
 		if (rearHandWon) {
-			highestBidder = rearHand;
+			declarerIndex = rearHand;
 		} else {
 			if (frontHandWonFirst) {
-				highestBidder = frontHand;
+				declarerIndex = frontHand;
 			} else {
-				highestBidder = middleHand;
+				declarerIndex = middleHand;
 			}
 		}
 
@@ -227,7 +226,7 @@ public class Game {
 	 */
 	private void setGameType() {
 		// Ask the declarer (highestBidder) if they want to see the skat.
-		PlayerInfo declarerInfo = this.players[this.highestBidder];
+		PlayerInfo declarerInfo = this.players[this.declarerIndex];
 		IPlayer declarerPlayer = declarerInfo.getPlayer();
 		Pile declarerHand = declarerInfo.getHandPile();
 		boolean viewSkat = declarerPlayer.decideTakeSkat(declarerHand.copy());
@@ -300,7 +299,7 @@ public class Game {
 
 		// Push GameTypeOptions object to each player.
 		for (PlayerInfo pi : this.players)
-			pi.getPlayer().setGameType(this.gameType, this.highestBidder);
+			pi.getPlayer().setGameType(this.gameType, this.declarerIndex);
 	}
 
 	/**
@@ -374,6 +373,13 @@ public class Game {
 			return false;
 		}
 
+		// If they have schwarz true, you can't have schneider false
+		if (schwarz && !schneider) {
+			// TODO: Report non-critical error (CAN'T DECLARE OUVERT AND
+			// NOT SCHWARZ) (we fix it up).
+			return false;
+		}
+		
 		return true;
 	}
 
@@ -547,11 +553,52 @@ public class Game {
 	 * Add or subtract points from the declarer's GameScore.
 	 */
 	private void assignGamePoints() {
-		// TODO
-		// Based on the number of card points the declarer won, the declarer's
-		// final bid, and the game value,
-		// determine whether or not the declarer wins or loses game points,
-		// and add or subtract the appropriate number to/from their GameScore.
+		// Get our card points and game value.
+		int curCardPoints = countCardPoints(declarerIndex);
+		int curGameValue = gameValue();
+		
+		// Grab our player and tricks won pile for them.
+		PlayerInfo player = players[declarerIndex];
+		Pile pile = player.getTricksWonPile();
+		
+		// There are 4 possible win conditions:
+		if (gameType.getGameType() == GameTypeOptions.GameType.Null) {
+			// If it's null, and declarer won no tricks.
+			if (pile.getNumCards() == 0) {
+				// They win.
+				player.setGameScore(player.getGameScore() + curGameValue);
+			} else {
+				// Otherwise they lose.
+				player.setGameScore(player.getGameScore() - (2 * curGameValue));
+			}
+		} else if (gameType.getSchwarz()) {
+			// If schwarz and declarer won all tricks.
+			if (pile.getNumCards() == 30) {
+				// They win.
+				player.setGameScore(player.getGameScore() + curGameValue);
+			} else {
+				// Otherwise they lose.
+				player.setGameScore(player.getGameScore() - (2 * curGameValue));
+			}
+		} else if (gameType.getSchneider()) {
+			// If schneider and declarer won at-least 90 card points.
+			if (curCardPoints >= 90 && curGameValue >= highestBid) {
+				// They win.
+				player.setGameScore(player.getGameScore() + curGameValue);
+			} else {
+				// Otherwise they lose.
+				player.setGameScore(player.getGameScore() - (2 * curGameValue));
+			}
+		} else {
+			// If any other case, declarer must've won over 60 points.
+			if (curCardPoints > 60 && curGameValue >= highestBid) {
+				// They win.
+				player.setGameScore(player.getGameScore() + curGameValue);
+			} else {
+				// Otherwise they lose.
+				player.setGameScore(player.getGameScore() - (2 * curGameValue));
+			}
+		}
 	}
 
 	/**
@@ -564,7 +611,7 @@ public class Game {
 
 		// When we start a round, we will increment dealer, and we want the
 		// first round to be with dealer = 0..
-		dealer = -1;
+		dealerIndex = -1;
 	}
 
 	/**
@@ -581,7 +628,7 @@ public class Game {
 		this.createGamePiles();
 
 		// Increment our dealer.
-		dealer = (dealer + 1) % PLAYER_COUNT;
+		dealerIndex = (dealerIndex + 1) % PLAYER_COUNT;
 
 		// Shuffle and deal cards
 		this.deck.shuffle();
@@ -593,9 +640,14 @@ public class Game {
 
 		// Play the 10 tricks of a game of skat.
 		for (int i = 0; i < 10; i++) {
-			trickNum = i;
+			// Play the trick and determine who won.
 			this.playTrick();
 			this.winTrick();
+			
+			// If it's a null game, if you win a trick, it's game over.
+			if(this.gameType.getGameType() == GameTypeOptions.GameType.Null)
+				if(firstToPlayIndex == declarerIndex)
+					break;
 		}
 
 		// Once 10 tricks have been played, count card points, determine whether
