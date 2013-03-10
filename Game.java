@@ -375,8 +375,8 @@ public class Game {
 
 		// If they have schwarz true, you can't have schneider false
 		if (schwarz && !schneider) {
-			// TODO: Report non-critical error (CAN'T DECLARE OUVERT AND
-			// NOT SCHWARZ) (we fix it up).
+			// TODO: Report non-critical error (CAN'T DECLARE SCHWARZ AND
+			// NOT SCHNEIDER) (we fix it up).
 			return false;
 		}
 		
@@ -483,11 +483,25 @@ public class Game {
 	private void winTrick() {
 		// TODO
 		// Examine cardsPlayed pile and determine which player won the trick.
+		int winnerIndex = 0;
+		
 		// Change firstToPlay to be the index of the player who won the trick.
+		this.firstToPlayIndex = winnerIndex;
+		
 		// Show each player who won the trick and which cards were played in the
 		// trick (call endTrick on each player).
+		for(int i = 0; i < PLAYER_COUNT; i++) {
+			IPlayer playerInstance = this.players[i].getPlayer();
+			playerInstance.endTrick(this.cardsPlayed, winnerIndex);
+		}
+		
 		// Move cards in cardsPlayed pile to the TricksWon pile of the player
 		// who won.
+		Pile winnerTricksWonPile = this.players[winnerIndex].getTricksWonPile();
+		while(this.cardsPlayed.getNumCards() > 0) {
+			Card removedCard = this.cardsPlayed.removeCard(0);
+			winnerTricksWonPile.addCard(removedCard);
+		}
 	}
 
 	/**
@@ -644,7 +658,7 @@ public class Game {
 			this.playTrick();
 			this.winTrick();
 			
-			// If it's a null game, if you win a trick, it's game over.
+			// If it's a null game, if declarer wins a trick, it's game over for them.
 			if(this.gameType.getGameType() == GameTypeOptions.GameType.Null)
 				if(firstToPlayIndex == declarerIndex)
 					break;
