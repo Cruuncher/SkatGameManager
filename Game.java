@@ -263,21 +263,50 @@ public class Game {
 	 * Each player plays a card into the cardsPlayed Pile.
 	 */
 	private void playTrick() {
-		// TODO
-		// Ask whichever player is firstToPlay to playTurn.
-		// Confirm that the card they chose to play is valid.
-		// Remove the card from their hand pile and add it to the cardsPlayed
-		// pile
-		// Continuing clockwise...
-		// Ask the next player to playTurn.
-		// Confirm that the card they chose to play is valid.
-		// Remove the card from their hand pile and add it to the cardsPlayed
-		// pile.
-		// Continuing clockwise...
-		// Ask the next player to playTurn.
-		// Confirm that the card they chose to play is valid.
-		// Remove the card from their hand pile and add it to the cardsPlayed
-		// pile.
+		// Create a player index
+		int playerIndex = firstToPlayIndex;
+		
+		// Loop for each player..
+		for(int i = 0; i < PLAYER_COUNT; i++) {
+			// Get the player
+			PlayerInfo curPlayerInfo = players[playerIndex];
+			IPlayer curPlayer = curPlayerInfo.getPlayer();
+			Pile curHand = curPlayerInfo.getHandPile();
+			Card playedCard = null;
+			
+			// We'll let our user try to play a valid card as many times as cards they have..
+			for (int x = 0; x < curHand.getNumCards(); x++) {
+				playedCard = curPlayer.playTurn(curHand.copy(), cardsPlayed.copy(), firstToPlayIndex);
+				
+				// Check if the card is valid, if it isn't, we make them try again.
+				if(!isValidCard(playedCard)) {
+					// TODO: Report non-critical error (played invalid card, we'll let them try again).
+					playedCard = null;
+				}
+				else
+					break;
+			}
+			
+			// If our player somehow didn't pick a card by now, our strategy is a total failure..
+			if(playedCard == null) {
+				// TODO: Report critical error (player couldn't pick a valid card after multiple tries).
+				return;
+			}
+			
+			// If our card isn't even in our hand, there's a real problem
+			if(!curHand.containsCard(playedCard)) {
+				// TODO: Report critical error (player chose a card they didn't even have to play for their trick...)
+				return;
+			}
+			
+			// Remove the card from their hand pile, add it to cardsPlayed
+			curHand.removeCard(playedCard);
+			cardsPlayed.addCard(playedCard);
+			
+			// Increment our player index.
+			playerIndex += 1;
+			playerIndex %= PLAYER_COUNT;
+		}
 	}
 
 	/**
