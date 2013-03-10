@@ -43,6 +43,8 @@ public class Main {
 		}
 
 		// Obtain our statistics.
+		GameStats gameStats = game.concludeGame();
+		System.out.print(gameStats.toString());
 	}
 
 }

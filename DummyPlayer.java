@@ -1,3 +1,5 @@
+import java.util.Random;
+
 
 
 /**
@@ -70,13 +72,22 @@ public class DummyPlayer implements IPlayer {
 
 	@Override
 	public GameTypeOptions decideGameType(Pile hand) {
-		// TODO (Currently returns null. After implementation, should return a GameTypeOptions object.)
 		// Examine your hand.
 		// [Strategy] Decide which type of game to play.
 		// Create the corresponding type of GameTypeOptions object, and return it.
 		// Keep in mind, only certain combinations of game type variables are valid.
 		// (For example, you cannot have a game that is both Skat and Schneider)
-		return new GameTypeOptions(GameTypeOptions.SkatHandType.Hand, GameTypeOptions.GameType.Suit, GameTypeOptions.TrumpSuit.Diamonds, false, false, false);
+		
+		// Our implementation will return random data.
+		Random r = new Random();
+		int indexHand = r.nextInt(GameTypeOptions.SkatHandType.values().length);
+		int indexSuit = r.nextInt(GameTypeOptions.GameType.values().length);
+		int indexTrump = r.nextInt(GameTypeOptions.TrumpSuit.values().length);
+		boolean iOuvert = r.nextInt(2) == 0;
+		boolean iSchwarz = r.nextInt(2) == 0;
+		boolean iSchneider = r.nextInt(2) == 0;
+		
+		return new GameTypeOptions(GameTypeOptions.SkatHandType.values()[indexHand], GameTypeOptions.GameType.values()[indexSuit], GameTypeOptions.TrumpSuit.values()[indexTrump], iOuvert, iSchneider, iSchwarz);
 	}
 
 	@Override
@@ -90,6 +101,8 @@ public class DummyPlayer implements IPlayer {
 		// Note: if you ARE the declarer, you will already have a record of your own index, so the second parameter in this method
 		// is not important to you. Furthermore, the difference between the two defenders is irrelevant to the declarer, so it is not
 		// necessary that the declarer knows the individual indexes of the two defenders.
+		this.gameType = gameType;
+		this.declarerIndex = declarerIndex;
 	}
 
 	@Override

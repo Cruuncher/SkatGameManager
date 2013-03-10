@@ -52,16 +52,6 @@ public class Card {
 		return Card.POINT_VALUES[faceValue.ordinal()];
 	}
 	
-	/**
-	 * Create a copy of this card.
-	 * @return a copy of this card.
-	 */
-	public Card copyCard(){
-		CARD_SUIT suit = this.suit;
-		FACE_VALUE faceValue = this.faceValue;
-		Card copy = new Card(suit, faceValue);
-		return copy;
-	}
 	
 	/**
 	 * Compares two cards and returns true if they have the same suit and faceValue.
@@ -76,5 +66,23 @@ public class Card {
 			retVal = false;
 		}
 		return retVal;
+	}
+	
+	@Override
+	public String toString() {
+		String cardString = "(";
+		
+		// Get our index for our enum option
+		int faceIndex = faceValue.ordinal();
+		
+		// If it's less than 4 (ACE), then use the index to get the name.
+		if(faceIndex < 4)
+			cardString += (faceIndex + 7);
+		// Otherwise, use the first character of our face value.
+		else
+			cardString += faceValue.toString().charAt(0);
+		cardString += " of " + suit.toString().toLowerCase();
+		cardString += ")";
+		return cardString;
 	}
 }

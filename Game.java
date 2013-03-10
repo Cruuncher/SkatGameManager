@@ -17,6 +17,9 @@ public class Game {
 			77, 81, 84, 88, 90, 96, 99, 100, 108, 110, 120, 121, 132, 144, 160,
 			168, 192 };
 
+	private GameStats gameStats;
+	private GameStats.RoundStats roundStats;
+	
 	private int dealerIndex;
 	private int firstToPlayIndex;
 	private int highestBid;
@@ -29,6 +32,8 @@ public class Game {
 	private GameTypeOptions gameType;
 	private int baseVal;
 	private int multiplier;
+	
+	private int indentationLevel = 0; // Used to format the GameStats, should be incremented/decremented.
 
 	public Game() {
 		// Initialize our player array.
@@ -142,9 +147,9 @@ public class Game {
 				else {
 					int t = nextBid(currentBid);
 					if (t == -1) {
-						// TODO report non-critical error
-						// System.out.println("Player " + middleHand +
-						// " forced to pass, as they cannot bid that high");
+						// Report non-critical error
+						this.roundStats.log("Player " + (middleHand + 1) +
+						 " forced to pass, as they cannot bid that high", this.indentationLevel);
 						break; // frontHand won this bidding, and it's defaulted
 								// to true
 					} else {
@@ -183,9 +188,9 @@ public class Game {
 				else {
 					int t = nextBid(currentBid);
 					if (t == -1) {
-						// TODO report non-critical error
-						// System.out.println("Player " + rear +
-						// " forced to pass, as they cannot bid that high");
+						// Report non-critical error
+						this.roundStats.log("Player " + (middleHand + 1) +
+						 " forced to pass, as they cannot bid that high", this.indentationLevel);
 						break; // frontHand won this bidding, and it's defaulted
 								// to true
 					} else {
@@ -231,6 +236,8 @@ public class Game {
 		Pile declarerHand = declarerInfo.getHandPile();
 		boolean viewSkat = declarerPlayer.decideTakeSkat(declarerHand.copy());
 
+		this.roundStats.log("Declarer looked at skat = " + viewSkat, this.indentationLevel);
+		
 		// If they want to view the skat..
 		if (viewSkat) {
 			// Let them decide on what cards to take.
@@ -239,11 +246,9 @@ public class Game {
 
 			// Verify skat length.
 			if (newSkat.getNumCards() != 2) {
-				// TODO: Skat is invalid size, report critical error to stats.
-				return;
+				// Skat is invalid size, report critical error to stats.
+				this.roundStats.logError("Declarer did not return the correct number of cards to the skat.", true, this.indentationLevel);
 			}
-
-			// TODO: Do the actual moving and verification of cards.
 
 			// Loop through the cards of the old skat
 			int z = 0;
@@ -263,14 +268,16 @@ public class Game {
 					// Error checking, make sure the replacedBy card is in
 					// declarerHand..
 					if (!declarerHand.containsCard(replacedBy)) {
-						// TODO: The new card in the skat wasn't in declarer
+						// The new card in the skat wasn't in declarer
 						// hand.
-						// We should report an error here to stats.
+						this.roundStats.logError("Declarer returned a card to the skat that was not in their hand.", true, this.indentationLevel);
 					}
 
 					// Swap the cards in skat with the hand.
 					skat.replaceCards(cardReplaced, replacedBy);
 					declarerHand.replaceCards(replacedBy, cardReplaced);
+					
+					this.roundStats.log("Declarer replaced card " + cardReplaced.toString() + " in skat with " + replacedBy.toString() + ".", this.indentationLevel);
 				}
 			}
 		}
@@ -279,23 +286,15 @@ public class Game {
 		GameTypeOptions chosenGameType = declarerPlayer
 				.decideGameType(declarerHand.copy());
 
-		// Confirm that their GameTypeOptions object is a valid combination of
-		// game types.
-		boolean validGame = this.isValidGameType(chosenGameType, viewSkat);
+		// Validate the gametype, fix up if necessary.
+		this.gameType = this.validateGameType(chosenGameType, viewSkat);
+		
+		// Spit out our gametype information.
+		this.roundStats.log("Starting (" + this.gameType.getHandType() + ", " + this.gameType.getGameType() + ")-game.", this.indentationLevel);
+		this.roundStats.log("(Trump Suit = " + this.gameType.getTrumpSuit() + " / Ouvert = " + this.gameType.getOuvert() + 
+				" / Schwarz = " + this.gameType.getSchwarz() + " / Schneider = " + this.gameType.getSchneider() + ")", this.indentationLevel);
 
-		// If valid, update gameType, multiplier and baseVal variables
-		// accordingly.
-		if (validGame) {
-			// Set our game-type.
-			this.gameType = chosenGameType;
-
-			// TODO: Update multiplier/base values.
-		} else {
-			// TODO: Decide on what to do when invalid.
-			// Maybe just use our statistics class to
-			// invoke a critical error and terminate?
-			return;
-		}
+		// TODO: Update multiplier/base values.
 
 		// Push GameTypeOptions object to each player.
 		for (PlayerInfo pi : this.players)
@@ -309,9 +308,9 @@ public class Game {
 	 *            the type of game to be evaluated
 	 * @param tookSkat
 	 *            indicates if the user took the skat.
-	 * @return True if gameType is valid, and False otherwise.
+	 * @return Returns the game-type options, fixed if required.
 	 */
-	private boolean isValidGameType(GameTypeOptions gameType, boolean tookSkat) {
+	private GameTypeOptions validateGameType(GameTypeOptions gameType, boolean tookSkat) {
 		// Get our options
 		GameTypeOptions.TrumpSuit trump = gameType.getTrumpSuit();
 		GameTypeOptions.SkatHandType skathandType = gameType.getHandType();
@@ -322,65 +321,66 @@ public class Game {
 
 		// Can't declare it as a hand game if you took the skat
 		if (skathandType == GameTypeOptions.SkatHandType.Hand && tookSkat) {
-			// TODO: Report non-critical error (SHOULDN'T DECLARE HAND GAME IF
-			// YOU TOOK SKAT)
-			return false;
+			// Report non-critical error (SHOULDN'T DECLARE HAND GAME IF YOU TOOK SKAT)
+			this.roundStats.logError("Declared hand game when declarer took skat. Setting to skat game instead.", this.indentationLevel);
+			skathandType = GameTypeOptions.SkatHandType.Skat;
+			
 		} else if (skathandType == GameTypeOptions.SkatHandType.Skat
 				&& !tookSkat) {
-			// TODO: Report non-critical error (SHOULDN'T DECLARE SKAT GAME IF
-			// YOU DIDN'T TAKE SKAT)
-			return false;
+			// Report non-critical error (SHOULDN'T DECLARE SKAT GAME IF YOU DIDN'T TAKE SKAT)
+			this.roundStats.logError("Declared skat game when declarer didn't take skat. Setting to hand game instead.", this.indentationLevel);
+			skathandType = GameTypeOptions.SkatHandType.Hand;
 		}
 
 		// Can't be a suit game without a suit.
 		if (actualGameType == GameTypeOptions.GameType.Suit
 				&& trump == GameTypeOptions.TrumpSuit.None) {
-			// TODO: Report critical error (CAN'T BE SUIT GAME WITH NO SUIT)
-			return false;
+			// Report critical error (CAN'T BE SUIT GAME WITH NO SUIT)
+			this.roundStats.logError("Cannot have a suit game without a trump suit.. Setting trump suit to Clubs.", this.indentationLevel);
+			trump = GameTypeOptions.TrumpSuit.Clubs;
 		}
 
 		// Can't be a null or grand game with a suit.
 		if (((actualGameType == GameTypeOptions.GameType.Grand) | (actualGameType == GameTypeOptions.GameType.Null))
 				&& trump != GameTypeOptions.TrumpSuit.None) {
-			// TODO: Report critical error (CAN'T BE GRAND OR NULL GAME WITH A
-			// TRUMP SUIT)
-			return false;
+			// Report critical error (CAN'T BE GRAND OR NULL GAME WITH A TRUMP SUIT)
+			this.roundStats.logError("Cannot have a " + actualGameType.toString() + " game with a trump suit.. Setting trump suit to None.", this.indentationLevel);
+			trump = GameTypeOptions.TrumpSuit.None;
 		}
 
 		// If it's a skat game, and not null, you can't declare anything of
 		// schwarz/schneider/ouvert.
 		if ((skathandType == GameTypeOptions.SkatHandType.Skat && actualGameType != GameTypeOptions.GameType.Null)
 				&& (schwarz | schneider | ouvert)) {
-			// TODO: Report non-critical error (CAN'T DECLARE
-			// SCHWARZ/SCHNEIDER/OUVERT IN SKAT GAME)
-			// (we should just ignore that they did this and continue? what
-			// about ouvert though?)
-			return false;
+			// Report non-critical error (CAN'T DECLARE SCHWARZ/SCHNEIDER/OUVERT IN SKAT GAME)
+			this.roundStats.logError("Cannot have a Skat, non-Null game with schwarz, schneider or ouvert. Setting all to false.", this.indentationLevel);
+			gameType = new GameTypeOptions(gameType.getHandType(), gameType.getGameType(), gameType.getTrumpSuit(), false, false, false);
 		}
 
 		// If it's a null game, you can't declare schwarz and schneider.
 		if (actualGameType == GameTypeOptions.GameType.Null
 				&& (schwarz | schneider)) {
-			// TODO: Report non-critical error (CAN'T DECLARE NULL GAME AND
-			// SCHWARZ/SCHNEIDER)
-			return false;
+			// Report non-critical error (CAN'T DECLARE NULL GAME AND SCHWARZ/SCHNEIDER)
+			this.roundStats.logError("Cannot have a null game and schwarz or schneider. Setting both to false.", this.indentationLevel);
+			schwarz = false;
+			schneider = false;
 		}
 
 		// If they have ouvert true, you can't have schwarz false
 		if (ouvert && !schwarz) {
-			// TODO: Report non-critical error (CAN'T DECLARE OUVERT AND
-			// NOT SCHWARZ) (we fix it up).
-			return false;
+			// Report non-critical error (CAN'T DECLARE OUVERT AND NOT SCHWARZ) (we fix it up).
+			this.roundStats.logError("Cannot have a ouvert game without schwarz. Setting Schwarz to true.", this.indentationLevel);
+			schwarz = true;
 		}
 
 		// If they have schwarz true, you can't have schneider false
 		if (schwarz && !schneider) {
-			// TODO: Report non-critical error (CAN'T DECLARE SCHWARZ AND
-			// NOT SCHNEIDER) (we fix it up).
-			return false;
+			// Report non-critical error (CAN'T DECLARE SCHWARZ AND NOT SCHNEIDER) (we fix it up).
+			this.roundStats.logError("Cannot have a schwarz game without schneider. Setting schneider to true.", this.indentationLevel);
+			schneider = true;
 		}
 		
-		return true;
+		return new GameTypeOptions(skathandType, actualGameType, trump, ouvert, schneider, schwarz);
 	}
 
 	/**
@@ -407,8 +407,8 @@ public class Game {
 				// Check if the card is valid, if it isn't, we make them try
 				// again.
 				if (!isValidCard(playedCard)) {
-					// TODO: Report non-critical error (played invalid card,
-					// we'll let them try again).
+					// Report non-critical error (played invalid card, we'll let them try again).
+					this.roundStats.logError("Player " + (playerIndex + 1) + " played an invalid card (" + playedCard.toString() + ")", this.indentationLevel);
 					playedCard = null;
 				} else
 					break;
@@ -417,21 +417,24 @@ public class Game {
 			// If our player somehow didn't pick a card by now, our strategy is
 			// a total failure..
 			if (playedCard == null) {
-				// TODO: Report critical error (player couldn't pick a valid
-				// card after multiple tries).
+				// Report critical error (player couldn't pick a valid card after multiple tries).
+				this.roundStats.logError("Player " + (playerIndex + 1) + " repetitively could not play a valid card.", true, this.indentationLevel);
 				return;
 			}
 
 			// If our card isn't even in our hand, there's a real problem
 			if (!curHand.containsCard(playedCard)) {
-				// TODO: Report critical error (player chose a card they didn't
-				// even have to play for their trick...)
+				// Report critical error (player chose a card they didn't even have to play for their trick...)
+				this.roundStats.logError("Player " + (playerIndex + 1) + " chose to play a card they didn't have in their hand.", true, this.indentationLevel);
 				return;
 			}
 
 			// Remove the card from their hand pile, add it to cardsPlayed
 			curHand.removeCard(playedCard);
 			cardsPlayed.addCard(playedCard);
+			
+			// Log our played card.
+			this.roundStats.log("Player " + (playerIndex + 1) + " played " + playedCard.toString(), this.indentationLevel);
 
 			// Increment our player index.
 			playerIndex = (playerIndex + 1) % PLAYER_COUNT;
@@ -502,6 +505,9 @@ public class Game {
 			Card removedCard = this.cardsPlayed.removeCard(0);
 			winnerTricksWonPile.addCard(removedCard);
 		}
+		
+		// Log our winner
+		this.roundStats.log("Trick won by Player " + (winnerIndex + 1), this.indentationLevel);
 	}
 
 	/**
@@ -619,6 +625,10 @@ public class Game {
 	 * Performs general setup necessary to start a game of skat.
 	 */
 	public void setupGame(IPlayer player1, IPlayer player2, IPlayer player3) {
+		
+		// Initialize our game stats
+		this.gameStats = new GameStats();
+		
 		// Setup our players
 		this.resetPlayers(player1, player2, player3);
 		this.assignIndexes();
@@ -648,24 +658,46 @@ public class Game {
 		this.deck.shuffle();
 		this.dealCards();
 
+		// Mark the start of a new round
+		this.roundStats = this.gameStats.createNewRound();
+		this.roundStats.setRoundStart();
+		
 		// Manage bidding and game type declaration.
 		this.initiateBidding();
 		this.setGameType();
 
 		// Play the 10 tricks of a game of skat.
 		for (int i = 0; i < 10; i++) {
+			// Log our header for our trick.
+			this.roundStats.log("Trick " + (i + 1) + ": ", this.indentationLevel);
+			this.indentationLevel++;
+			
 			// Play the trick and determine who won.
 			this.playTrick();
 			this.winTrick();
 			
+			this.indentationLevel--;
+			
 			// If it's a null game, if declarer wins a trick, it's game over for them.
 			if(this.gameType.getGameType() == GameTypeOptions.GameType.Null)
 				if(firstToPlayIndex == declarerIndex)
+				{
+					this.roundStats.log("Declarer won a trick in a null game. It's an early game over.", this.indentationLevel);
 					break;
+				}
 		}
 
 		// Once 10 tricks have been played, count card points, determine whether
 		// or not the declarer won, update game scores.
 		this.assignGamePoints();
+		
+		// Mark the end of a round
+		this.roundStats.setRoundEnd();
+	
+		this.roundStats.log("Round over. End of round statistics = [TODO]", this.indentationLevel);
+	}
+	
+	public GameStats concludeGame() {
+		return this.gameStats;
 	}
 }

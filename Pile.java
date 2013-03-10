@@ -35,7 +35,7 @@ public class Pile {
 	private Pile(Pile pile){
 		cards = new ArrayList<Card>(pile.getNumCards());
 		for (int i = 0; i < pile.getNumCards(); i++) {
-			this.addCard(pile.getCard(i).copyCard());
+			this.addCard(pile.getCard(i));
 		}
 	}
 	
