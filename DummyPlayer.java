@@ -29,7 +29,11 @@ public class DummyPlayer implements IPlayer {
 		// (playedCards is designed such that the first Card in the Pile is the card that was played first)
 		// Examine the Cards in your hand, and return the Card you decide to play.
 		// Keep GameType variables in mind in order to pick valid Cards.
-		return hand.getCard(0);
+		
+		// Play a random card
+		Random r = new Random();
+		int cardIndex = r.nextInt(hand.getNumCards());
+		return hand.getCard(cardIndex);
 	}
 
 	@Override
@@ -46,7 +50,10 @@ public class DummyPlayer implements IPlayer {
 		// Examine your hand.
 		// [Strategy] Decide whether or not to view the skat.
 		// Create a boolean retVal. Set as True to view the skat, False otherwise.
-		return false;
+		
+		// Make it random
+		Random r = new Random();
+		return r.nextInt(2) == 0;
 	}
 
 	@Override
@@ -56,6 +63,19 @@ public class DummyPlayer implements IPlayer {
 		// [Strategy] Choose any two cards to discard.
 		// Remove discard cards from your hand, put them in the skat.
 		// Return the skat. 
+		
+		// Decide how many cards to take.
+		Random r = new Random();
+		int swapAmt =  r.nextInt(3); // 0-2 cards.
+		
+		// Just swap them linearly (first skat card swap with first hand card, etc).
+		for(int i = 0; i < swapAmt; i++) {
+			Card skatCard = skat.getCard(i);
+			Card handCard = hand.getCard(i);
+			skat.replaceCards(skatCard, handCard);
+			hand.replaceCards(handCard, skatCard);
+		}
+		
 		return skat;
 	}
 
@@ -67,7 +87,10 @@ public class DummyPlayer implements IPlayer {
 		// Examine your hand.
 		// [Strategy] Decide whether to bid/match, or pass.
 		// Return true if you want to bid/match, or false if you want to pass.
-		return false;
+		
+		// Make it random
+		Random r = new Random();
+		return r.nextInt(2) == 0;
 	}
 
 	@Override

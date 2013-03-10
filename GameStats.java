@@ -97,6 +97,9 @@ public class GameStats {
 			
 			// If critical error..
 			if(critical) {
+				// We want to end the game now.
+				this.setRoundEnd();
+				
 				// We want to print out our statistics and terminate.
 				System.out.print(this.gameStatsParent.toString());
 				System.exit(0);

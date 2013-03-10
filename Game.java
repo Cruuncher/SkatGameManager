@@ -241,8 +241,7 @@ public class Game {
 		// If they want to view the skat..
 		if (viewSkat) {
 			// Let them decide on what cards to take.
-			Pile newSkat = declarerPlayer.giveSkat(declarerHand.copy(),
-					skat.copy());
+			Pile newSkat = declarerPlayer.giveSkat(skat.copy(), declarerHand.copy());
 
 			// Verify skat length.
 			if (newSkat.getNumCards() != 2) {
