@@ -5,8 +5,6 @@ import java.util.Random;
 /**
  * 
  * A dummy player is a representation of a Skat player who plays valid cards with no AI behind it.<br>
- * <br>
- * <em>Currently there is no handling of bad input</em>
  *
  */
 public class DummyPlayer implements IPlayer {

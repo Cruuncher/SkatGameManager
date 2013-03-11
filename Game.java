@@ -6,8 +6,6 @@ import java.util.List;
  * The game class contains all the logic for running a game of Skat. It manages
  * the code flow, sets up new games and validates user input to prevent invalid
  * user input or attempts at cheating.<br>
- * <br>
- * <em>Currently there is no handling of bad input</em>
  * 
  */
 public class Game {

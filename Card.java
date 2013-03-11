@@ -3,8 +3,6 @@
  * 
  * The card object represents a single card in a deck of standard playing cards.  It contains a suit and a face value and a point
  * value associated with that card within the game of Skat. <br>
- * <br>
- * <em>Currently there is no handling of bad input</em>
  * 
  */
 public class Card {

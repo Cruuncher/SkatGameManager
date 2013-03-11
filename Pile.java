@@ -5,8 +5,6 @@ import java.util.ArrayList;
  * 
  * A representation for any generic collection of cards.  Contains generic methods used by the varius collections of cards in
  * a game of Skat.<br>
- * <br>
- * <em>Currently there is no handling of bad input</em>
  * 
  */
 public class Pile {

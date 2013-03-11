@@ -2,8 +2,6 @@
 /**
  * 
  * PlayerInfo objects organize and contain all information pertaining to a particular IPlayer, including the instance of that IPlayer.<br>
- * <br>
- * <em>Currently there is no handling of bad input</em>
  * 
  */
 public class PlayerInfo {

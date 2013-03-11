@@ -5,8 +5,6 @@ import java.util.Collections;
  * 
  * The deck object is a representation of a partial deck of cards which contain the necessary card objects to play
  * a game of Skat.<br>
- * <br>
- * <em>Currently there is no handling of bad input</em>
  * 
  */
 public class Deck extends Pile {
