@@ -1,3 +1,5 @@
+package skatgame;
+
 import java.util.Random;
 
 

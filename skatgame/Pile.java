@@ -1,3 +1,4 @@
+package skatgame;
 
 import java.util.ArrayList;
 
