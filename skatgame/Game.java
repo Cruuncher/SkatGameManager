@@ -927,17 +927,22 @@ public class Game {
 
 		// Now that the tricks have been played, check if the declarer achieved schwarz or schneider.
 		
-		// Check if schneider was achieved
-		if(this.countCardPoints(this.declarerIndex) >= 90)
-			multiplier++;
-		
-		// Check if schwarz was achieved
-		if(this.players[this.declarerIndex].getTricksWonPile().getNumCards() == 30)
-			multiplier++;
-		
 		// If it's a null game, reset our multiplier.
 		if(this.gameType.getGameType() == GameTypeOptions.GameType.Null)
 			multiplier=1;
+		else {
+			// Check if schneider was achieved
+			if(this.countCardPoints(this.declarerIndex) >= 90) {
+				multiplier++;
+				this.roundStats.log("Schneider was achieved in a non-null game!", this.indentationLevel);
+			}
+			
+			// Check if schwarz was achieved
+			if(this.players[this.declarerIndex].getTricksWonPile().getNumCards() == 30) {
+				multiplier++;
+				this.roundStats.log("Schwarz was achieved in a non-null game!", this.indentationLevel);
+			}
+		}
 		
 		// Once 10 tricks have been played, count card points, determine whether
 		// or not the declarer won, update game scores.
