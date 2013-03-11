@@ -9,12 +9,14 @@ import java.util.List;
  */
 public class GameStats {
 	private List<RoundStats> roundStats;
-	
+	private PlayerInfo[] playerInfo;
+	private int gameErrors = 0;
 	/**
 	 * Our default constructor, initializes the GameStats.
 	 */
 	public GameStats() {
 		// Initialize our list.
+		gameErrors = 0;
 		roundStats = new ArrayList<RoundStats>();
 	}
 	
@@ -60,6 +62,17 @@ public class GameStats {
 	}
 	
 	/**
+	 * Sets the player information at the end of a game to be able to output score statistics.
+	 * @param players The player information array following a completed game.
+	 */
+	public void setEndGamePlayerInfo(PlayerInfo[] players) {
+		playerInfo = players;
+	}
+	
+	public void incrementGameErrors() {
+		gameErrors++;
+	}
+	/**
 	 * Returns a string representation of our entire game statistics.
 	 */
 	@Override
@@ -82,8 +95,16 @@ public class GameStats {
 		}
 		
 		// Otherwise print some game info..
-		result += "Game Duration: " + this.getGameDuration() + " seconds\n";
+		result += "Game Duration: " + String.format("%.4f", this.getGameDuration()) + " seconds\n";
 		result += "Game Rounds: " + roundStats.size() + "\n";
+		
+		// If we were given our end game player infos, print our scores
+		if(playerInfo != null) {
+			for(int i = 0; i < playerInfo.length; i++)
+				result += "Player " + (i + 1) + " Score: " + playerInfo[i].getGameScore() + "\n";
+		}
+		
+		result += "Total Game Errors: " + this.gameErrors + "\n";
 		result += seperator;
 		
 		// Print each rounds information
@@ -110,6 +131,7 @@ public class GameStats {
 		private Date dateRoundStarted;
 		private Date dateRoundEnded;
 		private List<String> logData;
+		private int roundErrorCount;
 		
 		/**
 		 * Our default constructor, creates a list of string logs we can append to for our statistics.
@@ -117,6 +139,7 @@ public class GameStats {
 		 */
 		public RoundStats(GameStats parent) {
 			this.gameStatsParent = parent;
+			this.roundErrorCount = 0;
 			this.logData = new ArrayList<String>();
 		}
 		
@@ -175,6 +198,10 @@ public class GameStats {
 			// Log our error
 			log(prefix + text + "]", indentLevel);
 			
+			// Increment our error counter.
+			this.roundErrorCount++;
+			this.gameStatsParent.incrementGameErrors();
+			
 			// If critical error..
 			if(critical) {
 				// We want to end the game now.
@@ -229,7 +256,8 @@ public class GameStats {
 		public String toString() {
 			// Populate our result with information.
 			String result = "";
-			result += "Round Duration: " + getDuration()  + " seconds\n";
+			result += "Round Duration: " + String.format("%.4f", this.getDuration())  + " seconds\n";
+			result += "Round Errors: " + this.roundErrorCount + "\n";
 			for(String s : logData)
 				result += s + "\n";
 			return result;

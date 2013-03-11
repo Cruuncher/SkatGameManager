@@ -246,7 +246,7 @@ public class Game {
 			// Verify skat length.
 			if (newSkat.getNumCards() != 2) {
 				// Skat is invalid size, report critical error to stats.
-				this.roundStats.logError("Declarer did not return the correct number of cards to the skat.", true, this.indentationLevel);
+				this.roundStats.logError("Declarer did not return the correct number of cards to the skat", true, this.indentationLevel);
 			}
 
 			// Loop through the cards of the old skat
@@ -269,7 +269,7 @@ public class Game {
 					if (!declarerHand.containsCard(replacedBy)) {
 						// The new card in the skat wasn't in declarer
 						// hand.
-						this.roundStats.logError("Declarer returned a card to the skat that was not in their hand.", true, this.indentationLevel);
+						this.roundStats.logError("Declarer returned a card to the skat that was not in their hand", true, this.indentationLevel);
 					}
 
 					// Swap the cards in skat with the hand.
@@ -486,7 +486,7 @@ public class Game {
 						cardsPlayed.copy(), firstToPlayIndex);
 
 				// Check if the card is valid, if it isn't, we make them try
-				// again.
+				// again. (If it's not in their hand, this function will critical error).
 				if (!isValidCard(playedCard)) {
 					// Report non-critical error (played invalid card, we'll let them try again).
 					this.roundStats.logError("Player " + (playerIndex + 1) + " played an invalid card (" + playedCard.toString() + ")", this.indentationLevel);
@@ -499,15 +499,7 @@ public class Game {
 			// a total failure..
 			if (playedCard == null) {
 				// Report critical error (player couldn't pick a valid card after multiple tries).
-				this.roundStats.logError("Player " + (playerIndex + 1) + " repetitively could not play a valid card.", true, this.indentationLevel);
-				return;
-			}
-
-			// If our card isn't even in our hand, there's a real problem
-			if (!curHand.containsCard(playedCard)) {
-				// Report critical error (player chose a card they didn't even have to play for their trick...)
-				this.roundStats.logError("Player " + (playerIndex + 1) + " chose to play a card they didn't have in their hand.", true, this.indentationLevel);
-				return;
+				this.roundStats.logError("Player " + (playerIndex + 1) + " repetitively could not play a valid card", true, this.indentationLevel);
 			}
 
 			// Remove the card from their hand pile, add it to cardsPlayed
@@ -529,35 +521,40 @@ public class Game {
 	 *            the Card to evaluate.
 	 * @return True if the card is value, and False otherwise.
 	 */
-	private boolean isValidCard(Card card) {
-		// Note: this is a helper function to be used in playTrick to confirm
-		// validity.
-		// TODO
-		// Based on the current Game Type, and the cards that have already been
-		// played (if any),
-		// determine whether or not the given card is valid.
-		// Return true if it is valid, and false otherwise.
-		return true;
+	private boolean isValidCard(Card playedCard) {
+		// Grab our player index who wishes to play this card.
+		int curPlayerIndex = (this.firstToPlayIndex + this.cardsPlayed.getNumCards()) % PLAYER_COUNT;
+		Pile curPlayerHand = this.players[curPlayerIndex].getHandPile();
+		
+		// If our card isn't even in our hand, there's a real problem
+		if (!curPlayerHand.containsCard(playedCard)) {
+		    // Report critical error (player chose a card they didn't even have to play for their trick...)
+		    this.roundStats.logError("Player " + (curPlayerIndex + 1) + " chose to play a card they didn't have in their hand", true, this.indentationLevel);
+		}
+		
+		// If leading suit hasn't been played, we can play anything.
+		if(this.cardsPlayed.getNumCards() == 0)
+			return true;
+		
+		// Leading suit has been played.. Get the suit
+		Card.CARD_SUIT leadingSuit = this.cardsPlayed.getCard(0).getSuit();
+		
+		// Check if the user's hand has a card of this suit.
+		boolean hasSuit = false;
+		for(int i = 0; i < curPlayerHand.getNumCards(); i++)
+			if(curPlayerHand.getCard(i).getSuit() == leadingSuit) {
+				hasSuit = true;
+				break;
+			}
+		
+		// If we don't have the suit, play anything.
+		if(!hasSuit)
+			return true;
+		
+		// We do have the suit, so lets make sure they played a card of it..
+		return playedCard.getSuit() == leadingSuit;
 	}
 
-	/**
-	 * Determines if a bid is valid.
-	 * 
-	 * @param bid
-	 *            The bid to evaluate
-	 * @param highestBid
-	 *            The previous highest bid
-	 * @return True if valid, false otherwise
-	 */
-	private boolean isValidBid(int bid, int highestBid) {
-		if (bid > highestBid) {
-			for (int i = 0; i < LEGAL_BID_VALUES.length; i++) {
-				if (bid == LEGAL_BID_VALUES[i])
-					return true;
-			}
-		}
-		return false;
-	}
 
 	/**
 	 * Determine which player wins the trick, move the cards they won to their
@@ -566,7 +563,7 @@ public class Game {
 	 */
 	private void winTrick() {
 		// Examine cardsPlayed pile and determine which player won the trick.
-		int winnerIndex = determineWinner(this.cardsPlayed);
+		int winnerIndex = determineWinner();
 		
 		// Change firstToPlay to be the index of the player who won the trick.
 		this.firstToPlayIndex = winnerIndex;
@@ -595,19 +592,19 @@ public class Game {
 	 * @param cardsPlayedPile The pile of cards that has been played for this trick.
 	 * @return The index of the winner for these pile of cards played.
 	 */
-	private int determineWinner(Pile cardsPlayedPile) {
+	private int determineWinner() {
 		// Create our winning card variable.
 		Card winningCard = null;
 		
 		// Lets make a list to store our strongest cards till we eliminate all but one.
 		List<Card> list = new ArrayList<Card>();
-		Card.CARD_SUIT leadingSuit = cardsPlayedPile.getCard(0).getSuit();
+		Card.CARD_SUIT leadingSuit = this.cardsPlayed.getCard(0).getSuit();
 		boolean notNull = this.gameType.getGameType() != GameTypeOptions.GameType.Null;
 		
 		// Loop through all the cards..
-		for(int i = 0; i < cardsPlayedPile.getNumCards(); i++) {
+		for(int i = 0; i < this.cardsPlayed.getNumCards(); i++) {
 			// Get this card
-			Card curCard = cardsPlayedPile.getCard(i);
+			Card curCard = this.cardsPlayed.getCard(i);
 			
 			// Only add special cards to our initial list.
 			boolean isLeadingSuit = curCard.getSuit() == leadingSuit;
@@ -643,7 +640,7 @@ public class Game {
 					for(Card.CARD_SUIT suitCheck : Card.CARD_SUIT.values()) {
 						for(Card curCard : list)
 							// If it's of the stronger jack suits (enum values represent the order of strongest).
-							if(curCard.getSuit() == suitCheck) {
+							if(curCard.getSuit() == suitCheck && curCard.getFaceValue() == Card.FACE_VALUE.JACK) {
 								// Set the winning card and break out of here to save time.
 								winningCard = curCard;
 								break;
@@ -685,11 +682,22 @@ public class Game {
 				// If we still didn't find the card, we check by card strength..
 				// ---------------------------------------------------------------
 				if(winningCard == null) {
-					// Find the card with the highest point value.
-					winningCard = list.get(0);
-					for(Card curCard : list) {
-						if(curCard.getPointValue() > winningCard.getPointValue())
-							winningCard = curCard;
+					// Check by card strength using our array of strongest to weakest.
+					Card.FACE_VALUE[] strongFacesList = { Card.FACE_VALUE.ACE, Card.FACE_VALUE.TEN, Card.FACE_VALUE.KING, 
+							Card.FACE_VALUE.QUEEN, Card.FACE_VALUE.NINE, Card.FACE_VALUE.EIGHT,
+							Card.FACE_VALUE.SEVEN };
+					
+					// Loop till we find the first card in our list..
+					for(Card.FACE_VALUE strongFace : strongFacesList) {
+						for(Card curCard : list)
+							if(curCard.getFaceValue() == strongFace) {
+								// Set it was the winning card and break out of here.
+								winningCard = curCard;
+								break;
+							}
+						// If the winning card was found, break out of here too
+						if(winningCard != null)
+							break;
 					}
 				}
 			}
@@ -720,16 +728,16 @@ public class Game {
 		
 		// By now we should have the winning card.. lets find out the index..
 		int indexOfWinningCard = -1;
-		for(int i = 0; i < cardsPlayedPile.getNumCards(); i++)
-			if(cardsPlayedPile.getCard(i) == winningCard) {
+		for(int i = 0; i < this.cardsPlayed.getNumCards(); i++)
+			if(this.cardsPlayed.getCard(i) == winningCard) {
 				indexOfWinningCard = i;
 				break;
 			}
 		
-		// Shouldn't be -1..
+		// Shouldn't be -1.. Will likely never happen but to be safe we'll include it here.
 		if(indexOfWinningCard == -1) {
-			// TODO: Report error.
-			return -1;
+			// Report error.
+			this.roundStats.logError("Could not determine winner somehow.. This is a Game error, not Player", true, this.indentationLevel);
 		}
 		
 		// We now can just add this index on-top of whoever played first to find out who wins..
@@ -820,43 +828,36 @@ public class Game {
 		Pile pile = player.getTricksWonPile();
 		
 		// There are 4 possible win conditions:
+		boolean wonGame = false;
 		if (gameType.getGameType() == GameTypeOptions.GameType.Null) {
 			// If it's null, and declarer won no tricks.
-			if (pile.getNumCards() == 0) {
-				// They win.
-				player.setGameScore(player.getGameScore() + curGameValue);
-			} else {
-				// Otherwise they lose.
-				player.setGameScore(player.getGameScore() - (2 * curGameValue));
-			}
+			wonGame = pile.getNumCards() == 0;
 		} else if (gameType.getSchwarz()) {
 			// If schwarz and declarer won all tricks.
-			if (pile.getNumCards() == 30) {
-				// They win.
-				player.setGameScore(player.getGameScore() + curGameValue);
-			} else {
-				// Otherwise they lose.
-				player.setGameScore(player.getGameScore() - (2 * curGameValue));
-			}
+			wonGame = (pile.getNumCards() == 30);
 		} else if (gameType.getSchneider()) {
 			// If schneider and declarer won at-least 90 card points.
-			if (curCardPoints >= 90 && curGameValue >= highestBid) {
-				// They win.
-				player.setGameScore(player.getGameScore() + curGameValue);
-			} else {
-				// Otherwise they lose.
-				player.setGameScore(player.getGameScore() - (2 * curGameValue));
-			}
+			wonGame = (curCardPoints >= 90 && curGameValue >= highestBid);
 		} else {
 			// If any other case, declarer must've won over 60 points.
-			if (curCardPoints > 60 && curGameValue >= highestBid) {
-				// They win.
-				player.setGameScore(player.getGameScore() + curGameValue);
-			} else {
-				// Otherwise they lose.
-				player.setGameScore(player.getGameScore() - (2 * curGameValue));
-			}
+			wonGame = (curCardPoints > 60 && curGameValue >= highestBid);
 		}
+		
+		// If we won the game, add to score, otherwise subtract
+		if(wonGame) {
+			player.setGameScore(player.getGameScore() + curGameValue);
+			this.roundStats.log("The declarer has won " + curGameValue + " points this round.", this.indentationLevel);
+		} else {
+			player.setGameScore(player.getGameScore() - (2 * curGameValue));
+			this.roundStats.log("The declarer has lost " + (2 * curGameValue) + " points this round.", this.indentationLevel);
+		}
+		
+		// Let our players know the round stats (we used to not have rounds, so this was called game stats, whoops..)
+		int[] endGameScores = new int[PLAYER_COUNT];
+		for(int i = 0; i < endGameScores.length; i++)
+			endGameScores[i] = this.players[i].getGameScore();
+		for(PlayerInfo playerInfo : this.players)
+			playerInfo.getPlayer().endGameInfo(wonGame, endGameScores);
 	}
 
 	/**
@@ -944,8 +945,6 @@ public class Game {
 		
 		// Mark the end of a round
 		this.roundStats.setRoundEnd();
-	
-		this.roundStats.log("Round over. End of round statistics = [TODO]", this.indentationLevel);
 	}
 	
 	/**
@@ -953,6 +952,10 @@ public class Game {
 	 * @return Returns the game statistics corresponding to the games played.
 	 */
 	public GameStats concludeGame() {
+		// Set end of game player statistics
+		this.gameStats.setEndGamePlayerInfo(this.players);
+		
+		// Now we just give the 
 		return this.gameStats;
 	}
 }

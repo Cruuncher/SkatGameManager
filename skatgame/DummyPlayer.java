@@ -10,14 +10,10 @@ import java.util.Random;
  *
  */
 public class DummyPlayer implements IPlayer {
-	
-	private GameTypeOptions gameType;
-	private int myPlayerIndex;
-	private int declarerIndex;
 
 	@Override
 	public void assignIndex(int PlayerIndex) {
-		myPlayerIndex = PlayerIndex;
+		// We would store our index here as a global variable so we know who we are.
 	}
 	
 	@Override
@@ -30,7 +26,23 @@ public class DummyPlayer implements IPlayer {
 		// Examine the Cards in your hand, and return the Card you decide to play.
 		// Keep GameType variables in mind in order to pick valid Cards.
 		
-		// Play a random card
+		// (This can be used to test the error for a user not having a card they played).
+		//if(true)
+		//	return new Card(Card.CARD_SUIT.CLUBS, Card.FACE_VALUE.ACE);
+		
+		// If we're not leading suit..
+		if(playedCards.getNumCards() > 0) {
+			// Get the leading suit
+			Card.CARD_SUIT leadingSuit = playedCards.getCard(0).getSuit();
+			
+			// If we can find a leading suit card, let's play it, this way it will be a valid play.
+			for(int i = 0; i < hand.getNumCards(); i++)
+				if(hand.getCard(i).getSuit() == leadingSuit) {
+					return hand.getCard(i);
+				}
+		}
+		
+		//  Play a random card
 		Random r = new Random();
 		int cardIndex = r.nextInt(hand.getNumCards());
 		return hand.getCard(cardIndex);
@@ -124,8 +136,9 @@ public class DummyPlayer implements IPlayer {
 		// Note: if you ARE the declarer, you will already have a record of your own index, so the second parameter in this method
 		// is not important to you. Furthermore, the difference between the two defenders is irrelevant to the declarer, so it is not
 		// necessary that the declarer knows the individual indexes of the two defenders.
-		this.gameType = gameType;
-		this.declarerIndex = declarerIndex;
+		
+		// Store game-type.
+		// Store declarer index.
 	}
 
 	@Override
