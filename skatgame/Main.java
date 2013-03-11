@@ -19,13 +19,22 @@ public class Main {
 		InputStreamReader isr = new InputStreamReader(System.in);
 		BufferedReader br = new BufferedReader(isr);
 		int numOfGames = 1;
-		try {
-			System.out.println("Please enter a number of rounds to play for this game:");
-			numOfGames = Integer.parseInt(br.readLine());
-			br.close();
-			isr.close();
-		} catch (Exception e) {
-			e.printStackTrace();
+		int tries = 0;
+		while(true) {
+			try {
+				System.out.println("Please enter a number of rounds to play for this game:");
+				numOfGames = Integer.parseInt(br.readLine());
+				br.close();
+				isr.close();
+				break;
+			} catch (Exception e) {
+				tries++;
+				if(tries == 3) {
+					System.out.println("Failed to enter a number of rounds after 3 tries.. Terminating..");
+					System.exit(0);
+				}
+				System.out.println("Invalid number entered, please try again..");
+			}
 		}
 		
 		// Set up our game, and set our player instances.
