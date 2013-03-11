@@ -4,8 +4,14 @@ import static org.junit.Assert.*;
 import skatgame.*;
 import org.junit.Test;
 
+/**
+ * Test cases used for CardTest to ensure it works properly.
+ */
 public class CardTest {
 
+	/**
+	 *  Tests that the Card class sets the appropriate suit upon construction.
+	 */
 	@Test
 	public void testCardSuits() {
 		Card cardHearts = new Card(Card.CARD_SUIT.HEARTS, Card.FACE_VALUE.JACK);
@@ -21,6 +27,9 @@ public class CardTest {
 		assertEquals("Asserting SUIT is clubs", Card.CARD_SUIT.CLUBS, cardClubs.getSuit());
 	}
 	
+	/**
+	 *  Tests that the Card class sets the appropriate face value upon construction.
+	 */
 	@Test
 	public void testCardFaceValue(){
 		Card cardAce = new Card(Card.CARD_SUIT.HEARTS, Card.FACE_VALUE.ACE);
@@ -36,6 +45,9 @@ public class CardTest {
 		assertEquals("Asserting face value is ten", Card.FACE_VALUE.TEN, cardTen.getFaceValue());
 	}
 	
+	/**
+	 *  Tests that the Card class sets the appropriate card point values upon construction.
+	 */
 	@Test
 	public void testCardPointValues(){
 		Card cardQueen = new Card(Card.CARD_SUIT.SPADES, Card.FACE_VALUE.QUEEN);
@@ -51,7 +63,9 @@ public class CardTest {
 		assertEquals("Asserting pointValue is 10", 10, cardTen.getPointValue());
 	}
 
-	
+	/**
+	 *  Tests that the Card class can successfully compare itself to another card and determine if it's equal.
+	 */
 	@Test
 	public void testCardEquals(){
 		Card cardTen = new Card(Card.CARD_SUIT.CLUBS, Card.FACE_VALUE.TEN);

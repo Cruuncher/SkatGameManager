@@ -4,6 +4,9 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import skatgame.*;
 
+/**
+ * Test cases used for Game to ensure it works properly.
+ */
 public class GameTest {
 
 	@Test

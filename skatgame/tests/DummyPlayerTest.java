@@ -4,18 +4,28 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import skatgame.*;
 
+/**
+ * Test cases used for DummyPlayerTest to ensure it works properly.
+ */
 public class DummyPlayerTest {
 	
+	/**
+	 * Tests that the DummyPlayer can play a turn successfully and returns a valid card.
+	 */
 	@Test
 	public void testPlayTurn() {
 		//playTurn should return a Card.
 		IPlayer dummy = new DummyPlayer();
 		Pile pile = new Pile();
-		pile.addCard(new Card(Card.CARD_SUIT.CLUBS, Card.FACE_VALUE.JACK));
-		assertEquals("Asserting that a Card is returned.", Card.class, dummy.playTurn(pile, pile, 2).getClass());
+		Card addedCard = new Card(Card.CARD_SUIT.CLUBS, Card.FACE_VALUE.JACK);
+		pile.addCard(addedCard);
+		assertEquals("Asserting that a Card is returned.", addedCard, dummy.playTurn(pile, pile, 2));
 	}
 	
-
+	/**
+	 * Tests that the DummyPlayer can successfully decide to bid.
+	 * (Used to be a useful test, code changed, left here for documentation purposes)
+	 */
 	@Test
 	public void testBid() {
 		IPlayer dummy = new DummyPlayer();
@@ -27,6 +37,9 @@ public class DummyPlayerTest {
 		assertTrue("The player somehow returned something invalid.", bid || !bid);
 	}
 
+	/**
+	 * Tests that the DummyPlayer takes the skat and returns the same instance of the skat pile.
+	 */
 	@Test
 	public void testGiveSkat() {
 		IPlayer dummy = new DummyPlayer();
@@ -45,6 +58,10 @@ public class DummyPlayerTest {
 		assertSame("Player did not return the same instance of Pile.", skat, dummy.giveSkat(skat, hand));
 	}
 
+	/**
+	 * Tests that the DummyPlayer can decide to take the skat.
+	 * (Just as in testBid, this is useless, left here since it changed).
+	 */
 	@Test
 	public void testDecideTakeSkat() {
 		IPlayer dummy = new DummyPlayer();
@@ -56,12 +73,15 @@ public class DummyPlayerTest {
 		assertTrue("The player somehow returned something invalid.", decision || !decision);
 	}
 	
+	/**
+	 * Tests that the DummyPlayer can return a non-null GameTypeOptions object.
+	 */
 	@Test
 	public void testDecideGameType() {
 		IPlayer dummy = new DummyPlayer();
 		Pile hand = new Pile();
 		GameTypeOptions gameType = dummy.decideGameType(hand);
-//		assertTrue("The player did not...    ??? wtf to do here?
+		assertTrue("Player did not return a GameTypeOptions.", gameType != null);
 		
 	}
 }

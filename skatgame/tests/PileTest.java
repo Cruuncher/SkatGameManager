@@ -4,9 +4,14 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import skatgame.*;
 
+/**
+ * Test cases used for Pile to ensure it works properly.
+ */
 public class PileTest {
 
-	
+	/**
+	 * Tests that the Pile can successfully retrieve the correct cards at a given index.
+	 */
 	@Test
 	public void testGetCard(){
 		Pile pile = new Pile();
@@ -18,22 +23,23 @@ public class PileTest {
 		
 		Pile pile2 = new Pile();
 		
-		boolean threwCorrectException = false;
-		boolean threwIncorrectException = false;
+		boolean threwCorrectError = false;
 		try {
 			pile2.getCard(0);
 		} catch(IndexOutOfBoundsException e){
-			threwCorrectException = true;
-			assertTrue("Correct exception caught.", threwCorrectException);
+			// Correct exception was caught.
+			threwCorrectError = true;
 		} catch (Exception e) {
-			threwIncorrectException = true;
-			assertFalse("Unexpected exception.", threwIncorrectException);
+			assertTrue("Unexpected exception.", false);
 		} finally {
-			assertTrue("Didn't throw any exception.", threwCorrectException && !threwIncorrectException);
+			assertTrue("Didn't throw any exception when should've.", threwCorrectError);
 		}
 		
 	}
 	
+	/**
+	 * Tests that the Pile can successfully add a card to itself and get it.
+	 */
 	@Test
 	public void testAddCard(){
 		Pile pile = new Pile();
@@ -42,6 +48,10 @@ public class PileTest {
 		assertEquals("Asserting the card was added to the pile", card, pile.getCard(0));
 	}
 	
+	/**
+	 * Tests that the Pile can successfully remove a given card when it should, or won't
+	 * when it shouldn't.
+	 */
 	@Test
 	public void testRemoveCard(){
 		Pile pile = new Pile();
@@ -75,6 +85,9 @@ public class PileTest {
 		}
 	}
 	
+	/**
+	 * Tests that the Pile can successfully retrieve the correct number of cards it contains.
+	 */
 	@Test
 	public void testGetNumCards(){
 		Pile pile = new Pile();
@@ -94,6 +107,10 @@ public class PileTest {
 		assertEquals("Asserting the pile has three cards in it.", 3, pile.getNumCards());
 	}
 	
+	/**
+	 * Tests that the Pile can successfully move all of its cards to another pile,
+	 * using the method to move all cards.
+	 */
 	@Test
 	public void testMoveAllCards(){
 		Pile pilesrc = new Pile();
@@ -120,6 +137,9 @@ public class PileTest {
 		assertEquals("Moved all cards (only one card) to destination pile.", 1, piledest.getNumCards());
 	}
 	
+	/**
+	 * Tests that the Pile can successfully copy itself and contain the correct cards.
+	 */
 	@Test
 	public void testCopyPile(){
 		Pile pile1 = new Pile();
