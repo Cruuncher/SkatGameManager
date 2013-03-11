@@ -4,14 +4,13 @@ import java.io.InputStreamReader;
 
 
 /**
- * 
- * The main loop.  Contains no logic and simply creates players and sets them to an instance of Game to play Skat.<br>
- * 
+ * The main entry point.  Contains no logic and simply creates players and sets them to an instance of Game to play Skat.<br>
  */
 public class Main {
 
 	/**
-	 * @param args
+	 * Our main entry point into the application
+	 * @param args Command line arguments given to the application (unused).
 	 */
 	public static void main(String[] args) {
 		

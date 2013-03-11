@@ -66,6 +66,9 @@ public class Card {
 		return retVal;
 	}
 	
+	/**
+	 * Returns a string representation of our card.
+	 */
 	@Override
 	public String toString() {
 		String cardString = "(";

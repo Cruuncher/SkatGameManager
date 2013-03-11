@@ -695,6 +695,10 @@ public class Game {
 		this.roundStats.log("Round over. End of round statistics = [TODO]", this.indentationLevel);
 	}
 	
+	/**
+	 * Concludes our Game, and gives us statistics for it.
+	 * @return Returns the game statistics corresponding to the games played.
+	 */
 	public GameStats concludeGame() {
 		return this.gameStats;
 	}
