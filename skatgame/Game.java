@@ -30,7 +30,6 @@ public class Game {
 	private Pile skat;
 	private Deck deck;
 	private GameTypeOptions gameType;
-	private int baseVal;
 	private int multiplier;
 	
 	private int indentationLevel = 0; // Used to format the GameStats, should be incremented/decremented.
@@ -227,7 +226,8 @@ public class Game {
 
 	/**
 	 * Defines the type of game to be played, including all applicable
-	 * variables.
+	 * variables. Sets the base multiplier until later we can find out if schwarz
+	 * or schneider was achieved.
 	 */
 	private void setGameType() {
 		// Ask the declarer (highestBidder) if they want to see the skat.
@@ -293,7 +293,27 @@ public class Game {
 		this.roundStats.log("(Trump Suit = " + this.gameType.getTrumpSuit() + " / Ouvert = " + this.gameType.getOuvert() + 
 				" / Schwarz = " + this.gameType.getSchwarz() + " / Schneider = " + this.gameType.getSchneider() + ")", this.indentationLevel);
 
-		// TODO: Update multiplier/base values.
+		
+		// Update multiplier (we'll later need to add a point each if the user achieved schwarz or schneider)
+		this.multiplier = this.countMatadors();
+		
+		// Add to our multiplier if it's a hand game.
+		if(this.gameType.getHandType() == GameTypeOptions.SkatHandType.Hand)
+			multiplier++;
+		
+		// If it's ouvert, add to multiplier
+		if(this.gameType.getOuvert())
+			multiplier++;
+		
+		// If it's schneider, add to multiplier
+		if(this.gameType.getSchneider())
+			multiplier++;
+		
+		// If it's schwarz, add to multiplier
+		if(this.gameType.getSchwarz())
+			multiplier++;
+		
+		// NOTE: Base values will be calculated in gameValue() and multiplied by multiplier.
 
 		// Push GameTypeOptions object to each player.
 		for (PlayerInfo pi : this.players)
@@ -384,6 +404,66 @@ public class Game {
 		return new GameTypeOptions(skathandType, actualGameType, trump, ouvert, schneider, schwarz);
 	}
 
+	/**
+	 * Our helper function used to count the declarers with or without matadors.
+	 * @return Returns the count of with or without matadors.
+	 */
+	private int countMatadors() {
+		// If it's a null game, we don't have multipliers, skip this.
+		if(this.gameType.getGameType() == GameTypeOptions.GameType.Null)
+			return 0;
+		
+		// Create our trump card list.
+		List<Card> trumpList = new ArrayList<Card>();
+		trumpList.add(new Card(Card.CARD_SUIT.CLUBS, Card.FACE_VALUE.JACK));
+		trumpList.add(new Card(Card.CARD_SUIT.SPADES, Card.FACE_VALUE.JACK));
+		trumpList.add(new Card(Card.CARD_SUIT.HEARTS, Card.FACE_VALUE.JACK));
+		trumpList.add(new Card(Card.CARD_SUIT.DIAMONDS, Card.FACE_VALUE.JACK));
+		
+		// If it's a Suit game, we have more trump cards.
+		if(this.gameType.getGameType() == GameTypeOptions.GameType.Suit) {
+			// Get our trump suit (this enum is the same, except the None option in the beginning, so we subtract 1 to index it)
+			Card.CARD_SUIT trumpSuit = Card.CARD_SUIT.values()[this.gameType.getTrumpSuit().ordinal() - 1];
+			trumpList.add(new Card(trumpSuit, Card.FACE_VALUE.ACE));
+			trumpList.add(new Card(trumpSuit, Card.FACE_VALUE.TEN));
+			trumpList.add(new Card(trumpSuit, Card.FACE_VALUE.KING));
+			trumpList.add(new Card(trumpSuit, Card.FACE_VALUE.QUEEN));
+			trumpList.add(new Card(trumpSuit, Card.FACE_VALUE.NINE));
+			trumpList.add(new Card(trumpSuit, Card.FACE_VALUE.EIGHT));
+			trumpList.add(new Card(trumpSuit, Card.FACE_VALUE.SEVEN));
+		}
+		
+		// Get our game hand and game options to determine what to check.
+		GameTypeOptions.SkatHandType handGameType = this.gameType.getHandType();
+		Pile declarerHand = this.players[this.declarerIndex].getHandPile();
+		
+		// Create our matador count and our boolean to check if we are counting with or without.
+		int matadorCount = 0;
+		boolean countingWith = true;
+		
+		// Loop through all the trump cards we're checking if we have or don't have.
+		for(Card curTrumpCard : trumpList) {
+			// Check our declarers hand.
+			boolean foundCard = declarerHand.containsCard(curTrumpCard);
+			
+			// Check our skat pile if it's a skat game, and we haven't found the card
+			if(handGameType == GameTypeOptions.SkatHandType.Skat && !foundCard)
+				// Check our skat pile
+				foundCard = this.skat.containsCard(curTrumpCard);
+			
+			// If it's the first time we're here, we should set if we're counting with or without.
+			if(matadorCount == 0)
+				countingWith = foundCard;
+			
+			// Check our with/without status
+			if(countingWith == foundCard)
+				matadorCount++;
+			else
+				break;
+		}
+		return matadorCount;
+	}
+	
 	/**
 	 * Each player plays a card into the cardsPlayed Pile.
 	 */
@@ -561,13 +641,42 @@ public class Game {
 	 * @return The game value.
 	 */
 	private int gameValue() {
-		// TODO
-		// Determine the value of this game using the base value and the
-		// multiplier.
-		// Recall that Null games have set values and dont use a base value and
-		// multiplier.
+		// Calculate the base value for the game
+		int baseVal = 24; // start off with grand game value.
+		
+		// Grab our gametype, and if it's not grand, calculate the values.
+		GameTypeOptions.GameType actualGameType = this.gameType.getGameType();
+		if(actualGameType != GameTypeOptions.GameType.Grand) {
+			// If it's a suit game, set the values
+			if(actualGameType == GameTypeOptions.GameType.Suit) {
+				// Get the index of our option, and subtract 1 since we won't have the first None option.
+				int trumpSuitIndex = this.gameType.getTrumpSuit().ordinal() - 1; 
+				// Our enum options are descending in terms of base value from 12.
+				baseVal = 12 - trumpSuitIndex;
+			}
+			else
+			{
+				// Grab some options used to calculate base value for Null.
+				boolean optHand = (this.gameType.getHandType() == GameTypeOptions.SkatHandType.Hand);
+				boolean optOuvert = this.gameType.getOuvert();
+				
+				// Calculate our base value based off these options..
+				if(!optHand && !optOuvert)
+					// Null
+					baseVal = 23;
+				else if(optHand && !optOuvert)
+					// Null Hand
+					baseVal = 35;
+				else if(!optHand && optOuvert)
+					// Null Ouvert
+					baseVal = 46;
+				else
+					// Null Ouvert Hand
+					baseVal = 59;
+			}
+		}
 		// Return the game value.
-		return 0;
+		return baseVal * multiplier;
 	}
 
 	/**
@@ -687,6 +796,20 @@ public class Game {
 				}
 		}
 
+		// Now that the tricks have been played, check if the declarer achieved schwarz or schneider.
+		
+		// Check if schneider was achieved
+		if(this.countCardPoints(this.declarerIndex) >= 90)
+			multiplier++;
+		
+		// Check if schwarz was achieved
+		if(this.players[this.declarerIndex].getTricksWonPile().getNumCards() == 30)
+			multiplier++;
+		
+		// If it's a null game, reset our multiplier.
+		if(this.gameType.getGameType() == GameTypeOptions.GameType.Null)
+			multiplier=1;
+		
 		// Once 10 tricks have been played, count card points, determine whether
 		// or not the declarer won, update game scores.
 		this.assignGamePoints();
