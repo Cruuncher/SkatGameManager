@@ -295,7 +295,7 @@ public class Game {
 
 		
 		// Update multiplier (we'll later need to add a point each if the user achieved schwarz or schneider)
-		this.multiplier = this.countMatadors();
+		this.multiplier = this.countMatadors() + 1; // Min multiplier for non null is 2.
 		
 		// Add to our multiplier if it's a hand game.
 		if(this.gameType.getHandType() == GameTypeOptions.SkatHandType.Hand)
