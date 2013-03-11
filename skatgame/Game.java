@@ -565,9 +565,8 @@ public class Game {
 	 * cards they won.
 	 */
 	private void winTrick() {
-		// TODO
 		// Examine cardsPlayed pile and determine which player won the trick.
-		int winnerIndex = 0;
+		int winnerIndex = determineWinner(this.cardsPlayed);
 		
 		// Change firstToPlay to be the index of the player who won the trick.
 		this.firstToPlayIndex = winnerIndex;
@@ -592,20 +591,149 @@ public class Game {
 	}
 
 	/**
-	 * Determine a given card's strength, based on the current game type.
-	 * Strength: Card A beats Card B if Card A's strength is greater than Card
-	 * B's strength in this type of game.
-	 * 
-	 * @param card
-	 *            The card to determine the strength of.
-	 * @return the card's strength in the context of the current game type.
+	 * Given a pile of played cards, determines the index of the winner.
+	 * @param cardsPlayedPile The pile of cards that has been played for this trick.
+	 * @return The index of the winner for these pile of cards played.
 	 */
-	private int cardStrength(Card card) {
-		// TODO
-		// For a given card and a defined Game Type, determine the strength of
-		// the card.
-		// Return the strength of the card.
-		return 0;
+	private int determineWinner(Pile cardsPlayedPile) {
+		// Create our winning card variable.
+		Card winningCard = null;
+		
+		// Lets make a list to store our strongest cards till we eliminate all but one.
+		List<Card> list = new ArrayList<Card>();
+		Card.CARD_SUIT leadingSuit = cardsPlayedPile.getCard(0).getSuit();
+		boolean notNull = this.gameType.getGameType() != GameTypeOptions.GameType.Null;
+		
+		// Loop through all the cards..
+		for(int i = 0; i < cardsPlayedPile.getNumCards(); i++) {
+			// Get this card
+			Card curCard = cardsPlayedPile.getCard(i);
+			
+			// Only add special cards to our initial list.
+			boolean isLeadingSuit = curCard.getSuit() == leadingSuit;
+			boolean specialJack = (curCard.getFaceValue() == Card.FACE_VALUE.JACK && this.gameType.getGameType() != GameTypeOptions.GameType.Null);
+			boolean isTrumpSuit = false;
+			// If it's not null gametype, check for trump suit.
+			if(notNull)
+				if(this.gameType.getTrumpSuit() != GameTypeOptions.TrumpSuit.None)
+					if(curCard.getSuit() == Card.CARD_SUIT.values()[this.gameType.getTrumpSuit().ordinal() - 1])
+						isTrumpSuit = true;
+			
+			if(isLeadingSuit || specialJack  || isTrumpSuit)
+				list.add(curCard);
+		}
+		
+		// If we have other cards we weren't able to eliminate as non-leading
+		// suit, we'll continue eliminating.
+		if(list.size() != 1)
+		{
+			// If it's not null, check for jacks..
+			if(notNull) 
+			{
+				// Check for jacks..
+				// -----------------------------------------------------
+				boolean jackExists = false;
+				for(Card curCard : list)
+					if(curCard.getFaceValue() == Card.FACE_VALUE.JACK) {
+						jackExists = true;
+						break;
+					}
+				// If it exists, find the strongest.
+				if(jackExists)
+					for(Card.CARD_SUIT suitCheck : Card.CARD_SUIT.values()) {
+						for(Card curCard : list)
+							// If it's of the stronger jack suits (enum values represent the order of strongest).
+							if(curCard.getSuit() == suitCheck) {
+								// Set the winning card and break out of here to save time.
+								winningCard = curCard;
+								break;
+							}
+						// If we found our card, break out of here too.
+						if(winningCard != null)
+							break;
+					}
+				
+				// If we didn't find our card as a jack, let's remove any non trump cards if we have any.
+				// ----------------------------------------------------
+				// Check for trump suit if it's a suit game and we haven't found our winner.
+				if(this.gameType.getGameType() == GameTypeOptions.GameType.Suit && winningCard == null) {
+					// Check for trump suit.
+					boolean trumpExists = false;
+					for(Card curCard : list)
+						if(curCard.getSuit() == Card.CARD_SUIT.values()[this.gameType.getTrumpSuit().ordinal() - 1]) {
+							trumpExists = true;
+							break;
+						}
+					
+					// If it exists, eliminate all in the list which aren't trump.
+					if(trumpExists)
+					{
+						Card.CARD_SUIT trumpSuit = Card.CARD_SUIT.values()[this.gameType.getTrumpSuit().ordinal() - 1];
+						for(int i = 0; i < list.size(); ) {
+							if(list.get(i).getSuit() != trumpSuit) {
+								list.remove(i);
+							}
+							else
+								i++;
+						}
+					}
+					// If we only have one card, set it as our winning card..
+					if(list.size() == 1)
+						winningCard = list.get(0);
+				}
+				
+				// If we still didn't find the card, we check by card strength..
+				// ---------------------------------------------------------------
+				if(winningCard == null) {
+					// Find the card with the highest point value.
+					winningCard = list.get(0);
+					for(Card curCard : list) {
+						if(curCard.getPointValue() > winningCard.getPointValue())
+							winningCard = curCard;
+					}
+				}
+			}
+			else
+			{
+				// If it is a null game, we simply find the strongest card according to this array of strongest-weakest..
+				//Ace, King, Queen, Jack, 10, 9, 8, 7
+				Card.FACE_VALUE[] strongFacesList = { Card.FACE_VALUE.ACE, Card.FACE_VALUE.KING, Card.FACE_VALUE.QUEEN, 
+						Card.FACE_VALUE.JACK, Card.FACE_VALUE.TEN, Card.FACE_VALUE.NINE, Card.FACE_VALUE.EIGHT,
+						Card.FACE_VALUE.SEVEN };
+				
+				// Loop till we find the first card in our list..
+				for(Card.FACE_VALUE strongFace : strongFacesList) {
+					for(Card curCard : list)
+						if(curCard.getFaceValue() == strongFace) {
+							// Set it was the winning card and break out of here.
+							winningCard = curCard;
+							break;
+						}
+					// If the winning card was found, break out of here too
+					if(winningCard != null)
+						break;
+				}
+			}
+		}
+		else
+			winningCard = list.get(0);
+		
+		// By now we should have the winning card.. lets find out the index..
+		int indexOfWinningCard = -1;
+		for(int i = 0; i < cardsPlayedPile.getNumCards(); i++)
+			if(cardsPlayedPile.getCard(i) == winningCard) {
+				indexOfWinningCard = i;
+				break;
+			}
+		
+		// Shouldn't be -1..
+		if(indexOfWinningCard == -1) {
+			// TODO: Report error.
+			return -1;
+		}
+		
+		// We now can just add this index on-top of whoever played first to find out who wins..
+		return (this.firstToPlayIndex + indexOfWinningCard) % PLAYER_COUNT;
 	}
 
 	/**
