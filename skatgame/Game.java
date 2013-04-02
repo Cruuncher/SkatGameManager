@@ -241,7 +241,7 @@ public class Game {
 		// If they want to view the skat..
 		if (viewSkat) {
 			// Let them decide on what cards to take.
-			Pile newSkat = declarerPlayer.giveSkat(skat.copy(), declarerHand.copy());
+			Pile newSkat = declarerPlayer.giveSkat(declarerHand.copy(), skat.copy());
 
 			// Verify skat length.
 			if (newSkat.getNumCards() != 2) {
@@ -258,14 +258,19 @@ public class Game {
 					Card replacedBy = null;
 					// There must've been a card we replaced it with.
 					for (int x = z; x < newSkat.getNumCards(); x++, z++) {
-						if (!skat.containsCard(newSkat.getCard(i))) {
-							replacedBy = newSkat.getCard(i);
+						if (!skat.containsCard(newSkat.getCard(x))) {
+							replacedBy = newSkat.getCard(x);
 							break;
 						}
 					}
 
 					// Error checking, make sure the replacedBy card is in
 					// declarerHand..
+					if(replacedBy == null)
+					{
+						// We couldn't find the card it was replaced by, this should only happen if they return two duplicate cards
+						this.roundStats.logError("Declarer took skat and returned a new skat pile that was not valid. [" + newSkat.getCard(0).toString() + ", " + newSkat.getCard(1).toString() + "]", true, this.indentationLevel);
+					}
 					if (!declarerHand.containsCard(replacedBy)) {
 						// The new card in the skat wasn't in declarer
 						// hand.
@@ -284,6 +289,9 @@ public class Game {
 		// Ask the declarer which type of game they want to play.
 		GameTypeOptions chosenGameType = declarerPlayer
 				.decideGameType(declarerHand.copy());
+	
+		if(chosenGameType == null)
+			this.roundStats.logError("Declarer did not return any GameTypeOptions. Cannot continue.", true, this.indentationLevel);
 
 		// Validate the gametype, fix up if necessary.
 		this.gameType = this.validateGameType(chosenGameType, viewSkat);

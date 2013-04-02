@@ -69,7 +69,7 @@ public class DummyPlayer implements IPlayer {
 	}
 
 	@Override
-	public Pile giveSkat(Pile skat, Pile hand) {
+	public Pile giveSkat(Pile hand, Pile skat) {
 		// TODO
 		// Add the two cards in the skat to your hand.
 		// [Strategy] Choose any two cards to discard.
