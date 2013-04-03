@@ -521,7 +521,8 @@ public class Game {
 			cardsPlayed.addCard(playedCard);
 			
 			// Log our played card.
-			this.roundStats.log("Player " + (playerIndex + 1) + " played " + playedCard.toString(), this.indentationLevel);
+			String tempParts = this.players[(playerIndex)].getPlayer().getClass().getName().replaceAll("skatgame.", "");
+			this.roundStats.log("Player " + tempParts + " played " + playedCard.toString(), this.indentationLevel);
 
 			// Increment our player index.
 			playerIndex = (playerIndex + 1) % PLAYER_COUNT;
@@ -598,7 +599,8 @@ public class Game {
 		}
 		
 		// Log our winner
-		this.roundStats.log("Trick won by Player " + (winnerIndex + 1), this.indentationLevel);
+		String tempParts = this.players[(winnerIndex)].getPlayer().getClass().getName().replaceAll("skatgame.", "");
+		this.roundStats.log("Trick won by Player " + (tempParts), this.indentationLevel);
 	}
 
 	/**
@@ -858,12 +860,13 @@ public class Game {
 		}
 		
 		// If we won the game, add to score, otherwise subtract
+		String tempParts = this.players[(declarerIndex)].getPlayer().getClass().getName().replaceAll("skatgame.", "");
 		if(wonGame) {
 			player.setGameScore(player.getGameScore() + curGameValue);
-			this.roundStats.log("The declarer has won " + curGameValue + " points this round.", this.indentationLevel);
+			this.roundStats.log("The " + tempParts + " has won " + curGameValue + " points this round.", this.indentationLevel);
 		} else {
 			player.setGameScore(player.getGameScore() - (2 * curGameValue));
-			this.roundStats.log("The declarer has lost " + (2 * curGameValue) + " points this round.", this.indentationLevel);
+			this.roundStats.log("The " + tempParts +" has lost " + (2 * curGameValue) + " points this round.", this.indentationLevel);
 		}
 		
 		// Let our players know the round stats (we used to not have rounds, so this was called game stats, whoops..)
