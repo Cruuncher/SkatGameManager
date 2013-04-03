@@ -212,6 +212,12 @@ public class Game {
 			}
 		}
 
+		// No one bid, quit early..
+		if(who == -1) {
+			declarerIndex = -1;
+			return;
+		}
+		
 		if (rearHandWon) {
 			declarerIndex = rearHand;
 		} else {
@@ -911,6 +917,11 @@ public class Game {
 		
 		// Manage bidding and game type declaration.
 		this.initiateBidding();
+		if(this.declarerIndex == -1) {
+			this.roundStats.log("Every Player chose not to make an initial bid this Round. It has been ended prematurely.");
+			this.roundStats.setRoundEnd();
+			return;
+		}
 		this.setGameType();
 
 		// Play the 10 tricks of a game of skat.
